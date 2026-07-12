@@ -3,284 +3,72 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AssetFlow - Modern IT & Asset Management for Operations Teams</title>
+  <title>AssetFlow - Enterprise Asset & Resource Management System</title>
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Font Awesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Custom CSS -->
   <link href="assets/css/style.css" rel="stylesheet">
   <style>
-    /* Premium Humanized Styling */
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif !important;
-      overflow-x: hidden;
-    }
-    
-    .navbar-glass {
-      backdrop-filter: blur(12px);
-      background: rgba(255, 255, 255, 0.8) !important;
-      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02);
-      border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
-      transition: all 0.3s ease;
-    }
-
+    /* Unique Landing Page Styling */
     .hero-section {
-      background: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.06) 0%, rgba(59, 130, 246, 0.01) 90%);
-      padding: 9rem 0 6rem 0;
+      background: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.05) 0%, rgba(59, 130, 246, 0.02) 90.1%);
+      padding: 8rem 0 6rem 0;
       position: relative;
-      overflow: hidden;
     }
-
-    /* Ambient blur blobs */
-    .ambient-glow {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(120px);
-      z-index: 0;
-      opacity: 0.6;
-      pointer-events: none;
-    }
-    .glow-1 {
-      top: -10%;
-      right: 5%;
-      width: 400px;
-      height: 400px;
-      background: rgba(37, 99, 235, 0.12);
-    }
-    .glow-2 {
-      bottom: 10%;
-      left: -5%;
-      width: 350px;
-      height: 350px;
-      background: rgba(59, 130, 246, 0.08);
-    }
-
     .hero-badge {
-      background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
-      color: #1d4ed8;
+      background-color: rgba(37, 99, 235, 0.1);
+      color: var(--primary-color);
       font-weight: 600;
-      font-size: 0.85rem;
-      padding: 0.5rem 1.2rem;
+      padding: 0.5rem 1rem;
       border-radius: 50px;
-      display: inline-flex;
-      align-items: center;
-      border: 1px solid rgba(37, 99, 235, 0.15);
+      display: inline-block;
       margin-bottom: 1.5rem;
     }
-
-    .btn-primary-custom {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
-      border: none !important;
-      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
-      font-weight: 600 !important;
-      border-radius: 10px !important;
-      transition: all 0.2s ease !important;
-    }
-    .btn-primary-custom:hover {
-      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
-      transform: translateY(-2px);
-    }
-
-    .btn-secondary-custom {
-      border: 1px solid #cbd5e1 !important;
-      background-color: #ffffff !important;
-      color: #334155 !important;
-      font-weight: 600 !important;
-      border-radius: 10px !important;
-      transition: all 0.2s ease !important;
-    }
-    .btn-secondary-custom:hover {
-      background-color: #f8fafc !important;
-      border-color: #94a3b8 !important;
-      transform: translateY(-2px);
-    }
-
-    /* Live CSS Mockup Dashboard */
-    .dashboard-mockup {
-      background: #f8fafc;
-      border: 1px solid rgba(226, 232, 240, 0.8);
-      border-radius: 20px;
-      box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.02);
-      overflow: hidden;
-      font-size: 13px;
-      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative;
-      z-index: 1;
-    }
-    .dashboard-mockup:hover {
-      transform: translateY(-6px) scale(1.01);
-      box-shadow: 0 35px 70px -10px rgba(37, 99, 235, 0.12), 0 0 0 1px rgba(37, 99, 235, 0.1);
-    }
-    .mockup-header {
-      background: #ffffff;
-      padding: 14px 20px;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-    .dot.red { background-color: #ef4444; }
-    .dot.yellow { background-color: #f59e0b; }
-    .dot.green { background-color: #10b981; }
-    .mockup-title {
-      font-size: 11px;
-      font-weight: 600;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .mockup-body {
-      background: #f1f5f9;
-    }
-    .mockup-sidebar {
-      width: 140px;
-      background: #ffffff;
-      border-right: 1px solid #e2e8f0;
-      padding: 16px 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .mockup-nav-item {
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 11px;
-      font-weight: 600;
-      color: #64748b;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      transition: all 0.2s;
-    }
-    .mockup-nav-item:hover, .mockup-nav-item.active {
-      background-color: #f1f5f9;
-      color: #2563eb;
-    }
-    .mockup-content {
-      padding: 16px;
-    }
-    .mockup-stat-card {
-      background: #ffffff;
-      border: 1px solid rgba(226, 232, 240, 0.8);
-      border-radius: 10px;
-      padding: 10px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
-    }
-    .text-xxs { font-size: 9px; }
-    .text-xs { font-size: 11px; }
-    .text-sm { font-size: 13px; }
-    .mockup-item-title {
-      font-weight: 600;
-      color: #1e293b;
-      font-size: 11px;
-      line-height: 1.2;
-    }
-    .mockup-list {
-      background: #ffffff;
-      border-radius: 12px;
-      border: 1px solid rgba(226, 232, 240, 0.8);
-      padding: 12px;
-    }
-    .mockup-list-item {
-      transition: background-color 0.2s;
-    }
-    .mockup-list-item:hover {
-      background-color: #f8fafc;
-    }
-
-    /* Landing Card Updates */
     .landing-card {
-      border: 1px solid rgba(226, 232, 240, 0.8) !important;
-      border-radius: 16px !important;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
       background-color: var(--card-bg);
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      transition: var(--transition);
       height: 100%;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02) !important;
     }
     .landing-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.05), 0 8px 10px -6px rgba(37, 99, 235, 0.05) !important;
-      border-color: rgba(37, 99, 235, 0.25) !important;
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-color);
     }
-    .landing-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 4px;
-      background: linear-gradient(90deg, #2563eb, #3b82f6);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    .landing-card:hover::before {
-      opacity: 1;
-    }
-
     .stat-number {
-      font-size: 3rem;
+      font-size: 2.75rem;
       font-weight: 800;
-      letter-spacing: -0.02em;
-      background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--primary-color);
     }
-
-    /* Accordion styling overrides */
-    .accordion-item {
-      border: 1px solid rgba(226, 232, 240, 0.8) !important;
-      border-radius: 12px !important;
-      margin-bottom: 0.8rem;
-    }
-    .accordion-button {
-      border-radius: 12px !important;
-      font-weight: 600;
-      color: #1e293b;
-    }
-    .accordion-button:not(.collapsed) {
-      color: #2563eb;
-      background-color: rgba(37, 99, 235, 0.03);
-      box-shadow: none;
-    }
-    .accordion-button:focus {
-      box-shadow: none;
+    .footer-landing {
+      background-color: var(--card-bg);
+      border-top: 1px solid var(--border-color);
+      padding: 3rem 0;
     }
   </style>
 </head>
 <body>
 
-  <!-- Glowing Blurs -->
-  <div class="ambient-glow glow-1"></div>
-  <div class="ambient-glow glow-2"></div>
-
   <!-- Landing Header -->
-  <nav class="navbar navbar-expand-lg navbar-light fixed-top py-3 navbar-glass">
+  <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom fixed-top py-3">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center" href="#">
         <i class="fa-solid fa-cube text-primary fs-3 me-2"></i>
-        <span class="fs-4 fw-bold text-dark" style="letter-spacing: -0.03em;">AssetFlow</span>
+        <span class="fs-4 fw-bold text-dark">AssetFlow</span>
       </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto align-items-center gap-3 mt-3 mt-lg-0">
           <li class="nav-item">
-            <a class="nav-link fw-semibold text-secondary" href="#features">Features</a>
+            <a class="nav-link fw-semibold" href="#features">Features</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link fw-semibold text-secondary" href="#testimonials">Reviews</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link fw-semibold text-secondary" href="#faq">FAQ</a>
+            <a class="nav-link fw-semibold" href="#stats">Impact</a>
           </li>
           <li class="nav-item">
             <a class="btn btn-secondary-custom px-4" href="pages/login.html">Sign In</a>
@@ -297,108 +85,28 @@
   <section class="hero-section">
     <div class="container">
       <div class="row align-items-center">
-        <div class="col-lg-6 mb-5 mb-lg-0 text-center text-lg-start" style="position: relative; z-index: 1;">
+        <div class="col-lg-6 mb-5 mb-lg-0 text-center text-lg-start">
           <div class="hero-badge">
-            <i class="fa-solid fa-sparkles me-2 text-warning"></i>AssetFlow v2.4 is now live
+            <i class="fa-solid fa-sparkles me-2"></i>SaaS Asset & Resource ERP
           </div>
-          <h1 class="display-4 fw-extrabold mb-4 text-dark" style="line-height: 1.15; letter-spacing: -0.04em; font-weight: 800;">
-            Get a grip on your <br>company's <span class="text-primary" style="background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">hardware & gear</span>.
+          <h1 class="display-4 fw-bold mb-4" style="line-height: 1.2; color: var(--text-color);">
+            Streamline Enterprise <span class="text-primary">Assets & Resources</span> effortlessly.
           </h1>
-          <p class="lead text-muted mb-4 fs-5" style="line-height: 1.6;">
-            Ditch the messy spreadsheets. Track hardware lifecycle, coordinate reservations, schedule preventative repairs, and run compliance audits in one beautiful workspace.
+          <p class="lead text-muted mb-4">
+            Track hardware, manage software compliance, book meeting rooms, schedule maintenance, and coordinate audits. All in one place.
           </p>
           <div class="d-flex flex-column flex-sm-row justify-content-center justify-content-lg-start gap-3">
-            <a href="pages/signup.html" class="btn btn-primary-custom btn-lg px-4 fs-6 text-white py-3">
-              Start Managing Free <i class="fa-solid fa-arrow-right ms-2"></i>
+            <a href="pages/signup.html" class="btn btn-primary-custom btn-lg px-4 fs-6 text-white">
+              Create Enterprise Account <i class="fa-solid fa-arrow-right ms-2"></i>
             </a>
-            <a href="pages/login.html" class="btn btn-secondary-custom btn-lg px-4 fs-6 py-3">
-              Request Live Demo
+            <a href="pages/login.html" class="btn btn-secondary-custom btn-lg px-4 fs-6">
+              Request a Demo
             </a>
           </div>
         </div>
         <div class="col-lg-6">
-          <!-- Premium Live Dashboard Mockup -->
-          <div class="dashboard-mockup">
-            <div class="mockup-header d-flex justify-content-between align-items-center">
-              <div class="d-flex align-items-center gap-2">
-                <span class="dot red"></span>
-                <span class="dot yellow"></span>
-                <span class="dot green"></span>
-                <span class="mockup-title ms-2">AssetFlow Portal</span>
-              </div>
-              <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1.5 text-xxs" style="font-weight: 600;"><i class="fa-solid fa-circle-check me-1"></i> Sync Active</span>
-            </div>
-            <div class="mockup-body d-flex">
-              <!-- Mini Sidebar -->
-              <div class="mockup-sidebar d-none d-sm-flex">
-                <div class="mockup-nav-item active"><i class="fa-solid fa-chart-pie me-2 text-primary"></i>Overview</div>
-                <div class="mockup-nav-item"><i class="fa-solid fa-laptop me-2"></i>Hardware</div>
-                <div class="mockup-nav-item"><i class="fa-solid fa-calendar me-2"></i>Bookings</div>
-                <div class="mockup-nav-item"><i class="fa-solid fa-wrench me-2"></i>Repairs</div>
-                <div class="mockup-nav-item"><i class="fa-solid fa-clipboard-check me-2"></i>Auditing</div>
-              </div>
-              <!-- Mini Content -->
-              <div class="mockup-content flex-grow-1">
-                <div class="row g-2 mb-3">
-                  <div class="col-4">
-                    <div class="mockup-stat-card">
-                      <span class="text-xxs text-muted d-block mb-1">Total Assets</span>
-                      <div class="fw-bold text-sm text-dark">412 units</div>
-                    </div>
-                  </div>
-                  <div class="col-4">
-                    <div class="mockup-stat-card">
-                      <span class="text-xxs text-muted d-block mb-1">Booked Today</span>
-                      <div class="fw-bold text-sm text-primary">12 desks</div>
-                    </div>
-                  </div>
-                  <div class="col-4">
-                    <div class="mockup-stat-card">
-                      <span class="text-xxs text-muted d-block mb-1">Health Score</span>
-                      <div class="fw-bold text-sm text-success">99.4%</div>
-                    </div>
-                  </div>
-                </div>
-                <!-- Mini Table -->
-                <div class="mockup-list shadow-sm">
-                  <div class="d-flex justify-content-between align-items-center mb-2 px-1">
-                    <span class="text-xs fw-bold text-dark">Active Asset Custody</span>
-                    <span class="text-xxs text-primary fw-semibold" style="cursor: pointer;">View All</span>
-                  </div>
-                  <div class="mockup-list-item d-flex align-items-center justify-content-between p-2 border-bottom">
-                    <div class="d-flex align-items-center gap-2">
-                      <i class="fa-solid fa-laptop text-primary text-xs"></i>
-                      <div>
-                        <div class="mockup-item-title">MacBook Pro M3 Max</div>
-                        <span class="text-xxs text-muted">Sarah Jenkins • Product</span>
-                      </div>
-                    </div>
-                    <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 text-xxs">Assigned</span>
-                  </div>
-                  <div class="mockup-list-item d-flex align-items-center justify-content-between p-2 border-bottom">
-                    <div class="d-flex align-items-center gap-2">
-                      <i class="fa-solid fa-mobile-screen text-success text-xs"></i>
-                      <div>
-                        <div class="mockup-item-title">iPhone 15 Pro Max</div>
-                        <span class="text-xxs text-muted">Alex Rivera • QA Testing</span>
-                      </div>
-                    </div>
-                    <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 text-xxs">Available</span>
-                  </div>
-                  <div class="mockup-list-item d-flex align-items-center justify-content-between p-2">
-                    <div class="d-flex align-items-center gap-2">
-                      <i class="fa-solid fa-server text-warning text-xs"></i>
-                      <div>
-                        <div class="mockup-item-title">Rack Server G12</div>
-                        <span class="text-xxs text-muted">IT Ops Room • Routine maintenance</span>
-                      </div>
-                    </div>
-                    <span class="badge bg-warning-subtle text-warning rounded-pill px-2 py-1 text-xxs">In Maintenance</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600" 
+               alt="Asset Dashboard" class="img-fluid rounded-4 shadow-lg border border-2 border-white">
         </div>
       </div>
     </div>
@@ -406,10 +114,10 @@
 
   <!-- Features Section -->
   <section id="features" class="py-5 border-top bg-light-custom">
-    <div class="container py-5">
+    <div class="container py-4">
       <div class="text-center max-w-600 mx-auto mb-5">
-        <h2 class="fw-bold mb-3 text-dark" style="letter-spacing: -0.02em;">Built for the Chaos of Modern Ops</h2>
-        <p class="text-muted fs-5">Take complete control over your hardware & space allocation from onboarding to retirement.</p>
+        <h2 class="fw-bold mb-3">Enterprise-Grade Modules</h2>
+        <p class="text-muted">Take complete control over your resource lifecycle, from requisition to disposal.</p>
       </div>
 
       <div class="row g-4">
@@ -419,8 +127,8 @@
             <div class="bg-primary-subtle text-primary rounded-3 p-3 mb-4 d-inline-block">
               <i class="fa-solid fa-boxes-stacked fs-3"></i>
             </div>
-            <h4 class="fw-bold text-dark mb-2">Hardware Tracking</h4>
-            <p class="text-muted mb-0">Know exactly who has the M3 MacBook and where the spare monitors are. No messy spreadsheets required.</p>
+            <h4 class="fw-bold">Asset Tracking</h4>
+            <p class="text-muted mb-0">Monitor location, value, ownership, serial numbers, and lifecycle of hardware, software, and physical equipment.</p>
           </div>
         </div>
         <!-- Feature 2 -->
@@ -429,8 +137,8 @@
             <div class="bg-success-subtle text-success rounded-3 p-3 mb-4 d-inline-block">
               <i class="fa-solid fa-calendar-check fs-3"></i>
             </div>
-            <h4 class="fw-bold text-dark mb-2">Desk & Room Bookings</h4>
-            <p class="text-muted mb-0">Reserve meeting rooms, vehicles, and desks instantly. Say goodbye to the "who booked Room C" Slack battles.</p>
+            <h4 class="fw-bold">Resource Booking</h4>
+            <p class="text-muted mb-0">Allow teams to book meeting rooms, company vehicles, lab spaces, and specialized gear with ease.</p>
           </div>
         </div>
         <!-- Feature 3 -->
@@ -439,8 +147,8 @@
             <div class="bg-info-subtle text-info rounded-3 p-3 mb-4 d-inline-block">
               <i class="fa-solid fa-screwdriver-wrench fs-3"></i>
             </div>
-            <h4 class="fw-bold text-dark mb-2">Smart Maintenance</h4>
-            <p class="text-muted mb-0">Schedule equipment checks, log server downtime, and fix broken hardware before it grinds operations to a halt.</p>
+            <h4 class="fw-bold">Maintenance Logs</h4>
+            <p class="text-muted mb-0">Schedule preventative maintenance, log breakdown repairs, track maintenance expenses, and minimize downtime.</p>
           </div>
         </div>
         <!-- Feature 4 -->
@@ -449,8 +157,8 @@
             <div class="bg-warning-subtle text-warning rounded-3 p-3 mb-4 d-inline-block">
               <i class="fa-solid fa-clipboard-check fs-3"></i>
             </div>
-            <h4 class="fw-bold text-dark mb-2">Stress-Free Audits</h4>
-            <p class="text-muted mb-0">Run physical equipment counts, track soft-licenses compliance, and generate digital audit logs in clicks.</p>
+            <h4 class="fw-bold">Compliance Auditing</h4>
+            <p class="text-muted mb-0">Conduct hardware count checks, verify software licenses, assign auditors, and auto-generate compliance scores.</p>
           </div>
         </div>
         <!-- Feature 5 -->
@@ -459,8 +167,8 @@
             <div class="bg-danger-subtle text-danger rounded-3 p-3 mb-4 d-inline-block">
               <i class="fa-solid fa-right-left fs-3"></i>
             </div>
-            <h4 class="fw-bold text-dark mb-2">Smooth Handoffs</h4>
-            <p class="text-muted mb-0">Transfer asset custody seamlessly with single-tap manager approvals and digital history trails.</p>
+            <h4 class="fw-bold">Asset Allocations</h4>
+            <p class="text-muted mb-0">Initiate team-to-team transfers and track allocations with manager approval workflows and digital signatures.</p>
           </div>
         </div>
         <!-- Feature 6 -->
@@ -469,8 +177,8 @@
             <div class="bg-dark-subtle text-dark rounded-3 p-3 mb-4 d-inline-block">
               <i class="fa-solid fa-chart-pie fs-3"></i>
             </div>
-            <h4 class="fw-bold text-dark mb-2">TCO & Depreciation</h4>
-            <p class="text-muted mb-0">Calculate asset depreciation automatically and track utilization rates to trim waste from company budgets.</p>
+            <h4 class="fw-bold">Analytics & Reports</h4>
+            <p class="text-muted mb-0">Monitor total cost of ownership, asset depreciation rates, resource utilization, and operational KPIs.</p>
           </div>
         </div>
       </div>
@@ -479,145 +187,42 @@
 
   <!-- Statistics Impact Section -->
   <section id="stats" class="py-5 border-top">
-    <div class="container py-5">
+    <div class="container py-4">
       <div class="row g-4 text-center">
         <div class="col-md-3 col-6">
           <div class="stat-number">99.9%</div>
-          <div class="text-muted fw-bold text-uppercase mt-2" style="font-size: 0.75rem; letter-spacing: 0.05em;">Service Uptime</div>
+          <div class="text-muted font-weight-medium">Service Uptime</div>
         </div>
         <div class="col-md-3 col-6">
           <div class="stat-number">40%</div>
-          <div class="text-muted fw-bold text-uppercase mt-2" style="font-size: 0.75rem; letter-spacing: 0.05em;">Less Asset Waste</div>
+          <div class="text-muted font-weight-medium">Reduced Asset Waste</div>
         </div>
         <div class="col-md-3 col-6">
           <div class="stat-number">10k+</div>
-          <div class="text-muted fw-bold text-uppercase mt-2" style="font-size: 0.75rem; letter-spacing: 0.05em;">Managed Devices</div>
+          <div class="text-muted font-weight-medium">Managed Assets</div>
         </div>
         <div class="col-md-3 col-6">
           <div class="stat-number">150+</div>
-          <div class="text-muted fw-bold text-uppercase mt-2" style="font-size: 0.75rem; letter-spacing: 0.05em;">Global Companies</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Testimonials Section -->
-  <section id="testimonials" class="py-5 border-top bg-white">
-    <div class="container py-5">
-      <div class="text-center max-w-600 mx-auto mb-5">
-        <h2 class="fw-bold mb-3 text-dark" style="letter-spacing: -0.02em;">Loved by Operations & IT Teams</h2>
-        <p class="text-muted fs-5">Here is what teams are saying after moving their workflows out of Google Sheets.</p>
-      </div>
-      <div class="row g-4">
-        <!-- Card 1 -->
-        <div class="col-md-4">
-          <div class="landing-card p-4">
-            <div class="d-flex align-items-center gap-3 mb-3">
-              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100&h=100" alt="Sarah" class="rounded-circle" style="width: 44px; height: 44px; object-fit: cover;">
-              <div>
-                <h6 class="fw-bold text-dark mb-0">Sarah K.</h6>
-                <small class="text-muted">Head of IT, Retool Inc.</small>
-              </div>
-            </div>
-            <p class="text-muted mb-0" style="line-height: 1.5;">"Our IT department stopped crying. We recovered 14 missing laptops in the first month alone by tracking them correctly."</p>
-          </div>
-        </div>
-        <!-- Card 2 -->
-        <div class="col-md-4">
-          <div class="landing-card p-4">
-            <div class="d-flex align-items-center gap-3 mb-3">
-              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100&h=100" alt="Marcus" class="rounded-circle" style="width: 44px; height: 44px; object-fit: cover;">
-              <div>
-                <h6 class="fw-bold text-dark mb-0">Marcus Chen</h6>
-                <small class="text-muted">VP of Operations, Vanta</small>
-              </div>
-            </div>
-            <p class="text-muted mb-0" style="line-height: 1.5;">"Double-booked boardrooms are a thing of the past. The interactive scheduling interface is simple enough that everyone actually uses it."</p>
-          </div>
-        </div>
-        <!-- Card 3 -->
-        <div class="col-md-4">
-          <div class="landing-card p-4">
-            <div class="d-flex align-items-center gap-3 mb-3">
-              <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100&h=100" alt="Elena" class="rounded-circle" style="width: 44px; height: 44px; object-fit: cover;">
-              <div>
-                <h6 class="fw-bold text-dark mb-0">Elena Rostova</h6>
-                <small class="text-muted">Compliance Lead, FinTech Corp</small>
-              </div>
-            </div>
-            <p class="text-muted mb-0" style="line-height: 1.5;">"Audits used to take us a week of chaotic emails. With AssetFlow's audit module, we ran our quarterly compliance check in under 3 hours."</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ Section -->
-  <section id="faq" class="py-5 border-top bg-light-custom">
-    <div class="container py-5">
-      <div class="text-center max-w-600 mx-auto mb-5">
-        <h2 class="fw-bold mb-3 text-dark" style="letter-spacing: -0.02em;">Frequently Asked Questions</h2>
-        <p class="text-muted fs-5">Everything you need to know about setting up your asset workflows.</p>
-      </div>
-      <div class="row justify-content-center">
-        <div class="col-lg-8">
-          <div class="accordion" id="faqAccordion">
-            <div class="accordion-item overflow-hidden bg-white shadow-sm">
-              <h2 class="accordion-header" id="faqHeadingOne">
-                <button class="accordion-button bg-white text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapseOne" aria-expanded="true">
-                  How is AssetFlow better than a shared Google Sheet?
-                </button>
-              </h2>
-              <div id="faqCollapseOne" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-                <div class="accordion-body text-muted" style="line-height: 1.6;">
-                  Unlike Google Sheets, AssetFlow prevents duplicate entries, enforces proper data structure, keeps a full historical audit trail, automatically alerts you when equipment needs maintenance, and manages live room/desk bookings dynamically.
-                </div>
-              </div>
-            </div>
-            <div class="accordion-item overflow-hidden bg-white shadow-sm">
-              <h2 class="accordion-header" id="faqHeadingTwo">
-                <button class="accordion-button collapsed bg-white text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapseTwo" aria-expanded="false">
-                  Can we import our existing inventory?
-                </button>
-              </h2>
-              <div id="faqCollapseTwo" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                <div class="accordion-body text-muted" style="line-height: 1.6;">
-                  Absolutely. You can import all your assets, users, and rooms in bulk using our standard CSV import templates. Your system can be up and running in less than 5 minutes.
-                </div>
-              </div>
-            </div>
-            <div class="accordion-item overflow-hidden bg-white shadow-sm">
-              <h2 class="accordion-header" id="faqHeadingThree">
-                <button class="accordion-button collapsed bg-white text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapseThree" aria-expanded="false">
-                  Who is the "Department Head" role designed for?
-                </button>
-              </h2>
-              <div id="faqCollapseThree" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                <div class="accordion-body text-muted" style="line-height: 1.6;">
-                  The Department Head role manages approvals for asset handoffs, tracks the resource utilization of their specific team, and delegates room/resource bookings without having full administrator access to internal system settings.
-                </div>
-              </div>
-            </div>
-          </div>
+          <div class="text-muted font-weight-medium">Global Enterprises</div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Footer -->
-  <footer class="footer-landing text-center py-5 bg-white border-top">
+  <footer class="footer-landing text-center">
     <div class="container">
       <a class="d-flex align-items-center justify-content-center mb-4 text-decoration-none" href="#">
         <i class="fa-solid fa-cube text-primary fs-3 me-2"></i>
-        <span class="fs-4 fw-bold text-dark" style="letter-spacing: -0.03em;">AssetFlow</span>
+        <span class="fs-4 fw-bold text-dark">AssetFlow</span>
       </a>
-      <p class="text-muted mb-4 max-w-600 mx-auto" style="line-height: 1.6;">
-        AssetFlow is the unified platform for modern operations teams to track hardware, schedule preventative maintenance, and allocate resources efficiently.
+      <p class="text-muted mb-4 max-w-600 mx-auto">
+        AssetFlow is the unified platform for modern operations teams to track assets, schedule preventative maintenance, and allocate resources efficiently.
       </p>
       <div class="d-flex justify-content-center gap-4 mb-4">
-        <a href="#" class="text-secondary fs-5"><i class="fa-brands fa-twitter"></i></a>
-        <a href="#" class="text-secondary fs-5"><i class="fa-brands fa-linkedin"></i></a>
-        <a href="#" class="text-secondary fs-5"><i class="fa-brands fa-github"></i></a>
+        <a href="#" class="text-muted fs-5"><i class="fa-brands fa-twitter"></i></a>
+        <a href="#" class="text-muted fs-5"><i class="fa-brands fa-linkedin"></i></a>
+        <a href="#" class="text-muted fs-5"><i class="fa-brands fa-github"></i></a>
       </div>
       <div class="border-top pt-4 text-muted small">
         &copy; 2026 AssetFlow Inc. All rights reserved. <span class="mx-2">|</span> <a href="#" class="text-muted text-decoration-none">Privacy Policy</a> <span class="mx-2">|</span> <a href="#" class="text-muted text-decoration-none">Terms of Service</a>

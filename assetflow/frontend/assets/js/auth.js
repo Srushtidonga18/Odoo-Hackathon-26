@@ -72,12 +72,10 @@ function setupLoginForm() {
   window.fillCreds = (email) => {
     const emailInput = document.getElementById('email');
     const passInput = document.getElementById('password');
-    if (emailInput) {
+    if (emailInput && passInput) {
       emailInput.value = email;
-      if (passInput) {
-        passInput.value = '';
-        passInput.focus();
-      }
+      passInput.value = 'Password123!';
+      form.dispatchEvent(new Event('submit'));
     }
   };
 
