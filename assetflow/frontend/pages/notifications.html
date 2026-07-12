@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AssetFlow - Notifications</title>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- SweetAlert2 -->
+  <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="../assets/css/style.css" rel="stylesheet">
+  <style>
+    /* Styling for read vs unread notifications */
+    .notif-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      transition: var(--transition);
+      cursor: pointer;
+      position: relative;
+    }
+    .notif-card:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    .notif-card.unread {
+      border-left: 4px solid var(--primary-color);
+      background-color: rgba(37, 99, 235, 0.02);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Dynamic Loader -->
+  <div class="loader-wrapper" id="global-loader">
+    <span class="loader"></span>
+  </div>
+
+  <div class="app-wrapper">
+    <!-- Sidebar Placeholder -->
+    <div id="sidebar-placeholder"></div>
+
+    <div class="main-content">
+      <!-- Navbar Placeholder -->
+      <div id="navbar-placeholder"></div>
+
+      <!-- Main Content Area -->
+      <div class="container-fluid p-4">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <div>
+            <h2 class="fw-bold mb-0">System Notifications</h2>
+            <p class="text-muted mb-0">Alerts, updates, and compliance audit notifications</p>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-secondary-custom" id="btn-clear-all-notifs">
+              <i class="fa-solid fa-trash-can me-2"></i>Clear All
+            </button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-xl-8 col-lg-10 mx-auto">
+            <!-- Notification list container -->
+            <div id="notifications-list-container">
+              <!-- Skeletons -->
+              <div class="d-flex flex-column gap-3">
+                <div class="skeleton" style="height: 80px; width: 100%;"></div>
+                <div class="skeleton" style="height: 80px; width: 100%;"></div>
+                <div class="skeleton" style="height: 80px; width: 100%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Placeholder -->
+      <div id="footer-placeholder"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/notifications.js"></script>
+</body>
+</html>

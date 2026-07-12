@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AssetFlow - Settings</title>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- SweetAlert2 -->
+  <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Dynamic Loader -->
+  <div class="loader-wrapper" id="global-loader">
+    <span class="loader"></span>
+  </div>
+
+  <div class="app-wrapper">
+    <!-- Sidebar Placeholder -->
+    <div id="sidebar-placeholder"></div>
+
+    <div class="main-content">
+      <!-- Navbar Placeholder -->
+      <div id="navbar-placeholder"></div>
+
+      <!-- Main Content Area -->
+      <div class="container-fluid p-4">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <div>
+            <h2 class="fw-bold mb-0">System Settings</h2>
+            <p class="text-muted mb-0">Configure dashboard display, alert emails, and localization preferences</p>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-xl-8 col-lg-10 mx-auto">
+            <div class="card-custom">
+              <h5 class="fw-bold mb-4 border-bottom pb-3"><i class="fa-solid fa-sliders me-2 text-primary"></i>Configuration Control Panel</h5>
+              
+              <form id="settings-form" novalidate>
+                
+                <!-- Display Section -->
+                <div class="mb-4 pb-3 border-bottom">
+                  <h6 class="fw-bold mb-3"><i class="fa-solid fa-desktop me-2 text-muted"></i>Display & Appearance</h6>
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="settings-dark-mode">
+                    <label class="form-check-label fw-medium text-dark-custom" for="settings-dark-mode" style="color: var(--text-color);">Enable Dashboard Dark Mode</label>
+                    <div class="form-text small text-muted">Adjusts system layouts to comfortable dark backgrounds.</div>
+                  </div>
+                </div>
+
+                <!-- Notifications Section -->
+                <div class="mb-4 pb-3 border-bottom">
+                  <h6 class="fw-bold mb-3"><i class="fa-solid fa-bell me-2 text-muted"></i>Alert & Email Notifications</h6>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="notify-maintenance" checked>
+                    <label class="form-check-label text-muted" for="notify-maintenance">
+                      Send email warnings when scheduled maintenance is overdue
+                    </label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="notify-audits" checked>
+                    <label class="form-check-label text-muted" for="notify-audits">
+                      Notify me when compliance audits are assigned or due
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="notify-bookings" checked>
+                    <label class="form-check-label text-muted" for="notify-bookings">
+                      Send instant confirmation receipts for resource booking requests
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Localization Section -->
+                <div class="mb-4">
+                  <h6 class="fw-bold mb-3"><i class="fa-solid fa-language me-2 text-muted"></i>Language & Region</h6>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label for="settings-lang" class="form-label-custom">System Display Language</label>
+                      <select id="settings-lang" class="form-select form-control-custom">
+                        <option value="en">English (US)</option>
+                        <option value="es">Español (Spanish)</option>
+                        <option value="fr">Français (French)</option>
+                        <option value="de">Deutsch (German)</option>
+                      </select>
+                      <div class="form-text small text-muted mt-1">Localization interface translations support.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+                  <button type="reset" class="btn btn-secondary-custom">Discard</button>
+                  <button type="submit" class="btn btn-primary-custom text-white" id="btn-save-settings">Save Changes</button>
+                </div>
+
+              </form>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Placeholder -->
+      <div id="footer-placeholder"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/settings.js"></script>
+</body>
+</html>

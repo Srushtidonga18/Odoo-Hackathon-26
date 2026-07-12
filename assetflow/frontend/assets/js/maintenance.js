@@ -1,0 +1,466 @@
+/**
+ * AssetFlow Maintenance JS
+ * Handles maintenance lists, scheduling logs, cost counters, and completions.
+ */
+
+let maintTable = null;
+let maintModal = null;
+let currentLogs = [];
+
+document.addEventListener('DOMContentLoaded', async () => {
+  window.AssetFlowLoader.show();
+  try {
+    maintModal = new bootstrap.Modal(document.getElementById('maintenanceModal'));
+    await loadMaintenanceData();
+    setupEventListeners();
+  } catch (err) {
+    console.error(err);
+  } finally {
+    window.AssetFlowLoader.hide();
+  }
+});
+
+async function loadMaintenanceData() {
+  try {
+    currentLogs = await window.ApiService.maintenance.list();
+    
+    // 1. Calculate statistics
+    const pendingCount = currentLogs.filter(l => l.status === 'Pending').length;
+    // Map completed or resolved
+    const completedCount = currentLogs.filter(l => l.status === 'Completed' || l.status === 'Resolved').length;
+    const totalCost = currentLogs.reduce((sum, log) => sum + (Number(log.cost) || 0), 0);
+
+    // Update stats UI
+    document.getElementById('count-pending-maint').textContent = pendingCount;
+    document.getElementById('count-completed-maint').textContent = completedCount;
+    document.getElementById('val-total-maint-cost').textContent = `₹${totalCost.toLocaleString()}`;
+
+    // 2. Render Kanban & Table Views
+    renderMaintenanceTable(currentLogs);
+    renderKanbanBoard(currentLogs);
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function renderMaintenanceTable(logs) {
+  const tbody = document.querySelector('#maintenance-table tbody');
+  if (!tbody) return;
+
+  if ($.fn.DataTable.isDataTable('#maintenance-table')) {
+    $('#maintenance-table').DataTable().destroy();
+  }
+
+  let html = '';
+  const role = window.RbacService.getCurrentUserRole();
+  const canApproveMaint = window.RbacService.hasPermission(role, 'approve_maintenance');
+
+  logs.forEach(log => {
+    let statusClass = 'bg-warning text-dark';
+    let actionBtn = '';
+
+    const displayStatus = log.status === 'Completed' ? 'Resolved' : log.status;
+
+    if (log.status === 'Completed' || log.status === 'Resolved') {
+      statusClass = 'bg-success';
+      actionBtn = '<span class="text-muted small">Resolved</span>';
+    } else if (!canApproveMaint) {
+      actionBtn = `<span class="text-muted small">${displayStatus}</span>`;
+    } else if (log.status === 'Pending') {
+      statusClass = 'bg-warning text-dark';
+      actionBtn = `
+        <button class="btn btn-sm btn-success btn-resolve" title="Mark as Resolved">
+          <i class="fa-solid fa-circle-check me-1"></i>Resolve
+        </button>
+      `;
+    } else {
+      statusClass = 'bg-info text-dark';
+      actionBtn = `
+        <button class="btn btn-sm btn-success btn-resolve" title="Mark as Resolved">
+          <i class="fa-solid fa-circle-check me-1"></i>Resolve
+        </button>
+      `;
+    }
+
+    html += `
+      <tr data-id="${log.id}">
+        <td><strong class="text-primary">${log.id}</strong></td>
+        <td><strong>${log.assetId}</strong></td>
+        <td>
+          <div class="fw-semibold text-dark-custom" style="color: var(--text-color);">${log.assetName}</div>
+        </td>
+        <td>${log.type}</td>
+        <td><span class="text-truncate-2 small" style="max-width:200px;" title="${log.description || ''}">${log.description || '--'}</span></td>
+        <td class="fw-medium">₹${Number(log.cost).toLocaleString()}</td>
+        <td>${log.date}</td>
+        <td><span class="badge ${statusClass} rounded-pill px-2.5 py-1">${displayStatus}</span></td>
+        <td>${actionBtn}</td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
+
+  maintTable = $('#maintenance-table').DataTable({
+    pageLength: 10,
+    lengthChange: false,
+    info: true,
+    ordering: false,
+    language: {
+      search: "",
+      searchPlaceholder: "Search maintenance log..."
+    }
+  });
+}
+
+function renderKanbanBoard(logs) {
+  const columns = {
+    'Pending': document.getElementById('kanban-pending'),
+    'Approved': document.getElementById('kanban-approved'),
+    'Technician assigned': document.getElementById('kanban-assigned'),
+    'In progress': document.getElementById('kanban-inprogress'),
+    'Resolved': document.getElementById('kanban-resolved')
+  };
+
+  // Clear all columns first
+  Object.keys(columns).forEach(key => {
+    if (columns[key]) columns[key].innerHTML = '';
+  });
+
+  const counts = { 'Pending': 0, 'Approved': 0, 'Technician assigned': 0, 'In progress': 0, 'Resolved': 0 };
+
+  logs.forEach(log => {
+    // Treat "Completed" as "Resolved"
+    let status = log.status;
+    if (status === 'Completed') status = 'Resolved';
+
+    if (!columns[status]) return;
+    counts[status]++;
+
+    const role = window.RbacService.getCurrentUserRole();
+    const canApprove = window.RbacService.hasPermission(role, 'approve_maintenance');
+    const isResolved = status === 'Resolved';
+    const cardClass = isResolved ? 'kanban-card resolved-card' : 'kanban-card';
+    const isDraggable = canApprove;
+
+    // Action buttons depending on state
+    let actionButtons = '';
+    if (canApprove) {
+      if (status === 'Pending') {
+        actionButtons = `<button class="btn btn-sm btn-outline-primary py-0 px-1 fs-8 btn-move" data-id="${log.id}" data-to="Approved">Approve <i class="fa-solid fa-arrow-right"></i></button>`;
+      } else if (status === 'Approved') {
+        actionButtons = `<button class="btn btn-sm btn-outline-info py-0 px-1 fs-8 btn-move text-dark" data-id="${log.id}" data-to="Technician assigned">Assign Tech <i class="fa-solid fa-arrow-right"></i></button>`;
+      } else if (status === 'Technician assigned') {
+        actionButtons = `<button class="btn btn-sm btn-outline-danger py-0 px-1 fs-8 btn-move" data-id="${log.id}" data-to="In progress">Start Work <i class="fa-solid fa-arrow-right"></i></button>`;
+      } else if (status === 'In progress') {
+        actionButtons = `<button class="btn btn-sm btn-outline-success py-0 px-1 fs-8 btn-move" data-id="${log.id}" data-to="Resolved">Resolve <i class="fa-solid fa-circle-check"></i></button>`;
+      }
+    }
+
+    const costHtml = log.cost ? `<span class="badge bg-secondary-subtle text-dark-custom fs-8">₹${Number(log.cost).toLocaleString()}</span>` : '';
+
+    const html = `
+      <div class="${cardClass}" draggable="${isDraggable}" ondragstart="drag(event, '${log.id}')" data-id="${log.id}">
+        <div class="d-flex justify-content-between align-items-start mb-1">
+          <span class="fw-bold text-primary fs-8">${log.id}</span>
+          <span class="fw-semibold text-dark fs-8">${log.assetId}</span>
+        </div>
+        <div class="fw-semibold text-dark-custom mb-1 fs-7" style="color: var(--text-color);">${log.assetName}</div>
+        <div class="text-muted small fs-8 mb-2">${log.description || 'No description'}</div>
+        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary-subtle">
+          ${costHtml}
+          <div class="d-flex gap-1">
+            ${actionButtons}
+          </div>
+        </div>
+      </div>
+    `;
+
+    columns[status].innerHTML += html;
+  });
+
+  // Update headers badges
+  document.getElementById('badge-pending').textContent = counts['Pending'];
+  document.getElementById('badge-approved').textContent = counts['Approved'];
+  document.getElementById('badge-assigned').textContent = counts['Technician assigned'];
+  document.getElementById('badge-inprogress').textContent = counts['In progress'];
+  document.getElementById('badge-resolved').textContent = counts['Resolved'];
+}
+
+// Drag and drop global hooks
+window.allowDrop = function(ev) {
+  ev.preventDefault();
+};
+
+window.drag = function(ev, id) {
+  ev.dataTransfer.setData("text", id);
+};
+
+window.drop = async function(ev, newStatus) {
+  ev.preventDefault();
+  const id = ev.dataTransfer.getData("text");
+  if (!id) return;
+  await moveCardStatus(id, newStatus);
+};
+
+async function moveCardStatus(id, newStatus) {
+  const role = window.RbacService.getCurrentUserRole();
+  const canApproveMaint = window.RbacService.hasPermission(role, 'approve_maintenance');
+  if (!canApproveMaint) {
+    Swal.fire('Access Denied', 'You do not have permission to change maintenance task statuses.', 'error');
+    return;
+  }
+  window.AssetFlowLoader.show();
+  try {
+    // Treat Resolved as Completed in local storage compatibility
+    const apiStatus = newStatus === 'Resolved' ? 'Completed' : newStatus;
+    
+    // Update API state
+    await window.ApiService.maintenance.updateStatus(id, apiStatus);
+
+    // Sync Asset status
+    const log = currentLogs.find(l => l.id === id);
+    if (log) {
+      await updateAssetMaintenanceState(log.assetId, newStatus);
+    }
+
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true
+    });
+    Toast.fire({
+      icon: 'success',
+      title: `Task moved to ${newStatus}`
+    });
+
+    await loadMaintenanceData();
+  } catch (err) {
+    Swal.fire('Error', err.message, 'error');
+  } finally {
+    window.AssetFlowLoader.hide();
+  }
+}
+
+async function updateAssetMaintenanceState(assetId, logStatus) {
+  try {
+    const assets = JSON.parse(localStorage.getItem('mock_assets') || '[]');
+    const asset = assets.find(a => String(a.id) === String(assetId));
+    if (asset) {
+      if (logStatus === 'Resolved' || logStatus === 'Completed') {
+        asset.status = 'Active'; // Reset to Active
+      } else {
+        asset.status = 'Maintenance'; // Set to Maintenance
+      }
+      localStorage.setItem('mock_assets', JSON.stringify(assets));
+    }
+  } catch (err) {
+    console.error("Failed to sync asset state:", err);
+  }
+}
+
+async function setupEventListeners() {
+  // View Toggle buttons
+  const btnViewKanban = document.getElementById('btn-view-kanban');
+  const btnViewTable = document.getElementById('btn-view-table');
+  const kanbanViewEl = document.getElementById('maintenance-kanban-view');
+  const tableViewEl = document.getElementById('maintenance-table-view');
+
+  if (btnViewKanban && btnViewTable) {
+    btnViewKanban.addEventListener('click', () => {
+      btnViewKanban.classList.add('active');
+      btnViewTable.classList.remove('active');
+      kanbanViewEl.classList.remove('d-none');
+      tableViewEl.classList.add('d-none');
+    });
+
+    btnViewTable.addEventListener('click', () => {
+      btnViewTable.classList.add('active');
+      btnViewKanban.classList.remove('active');
+      tableViewEl.classList.remove('d-none');
+      kanbanViewEl.classList.add('d-none');
+    });
+  }
+
+  // Manual Move Buttons on Kanban Cards
+  $(document).on('click', '.btn-move', async function() {
+    const id = $(this).attr('data-id');
+    const toStatus = $(this).attr('data-to');
+    await moveCardStatus(id, toStatus);
+  });
+
+  // Modal open
+  const openModalBtn = document.getElementById('btn-open-maintenance-modal');
+  if (openModalBtn) {
+    openModalBtn.addEventListener('click', async () => {
+      window.AssetFlowLoader.show();
+      try {
+        const assets = await window.ApiService.assets.list();
+        const select = document.getElementById('maint-asset-id');
+        if (select) {
+          let optionsHtml = '<option value="">Select asset to schedule...</option>';
+          assets.forEach(asset => {
+            optionsHtml += `<option value="${asset.id}" data-name="${asset.name}">${asset.id} - ${asset.name} (${asset.status})</option>`;
+          });
+          select.innerHTML = optionsHtml;
+        }
+
+        // Set default date to today
+        const dateInput = document.getElementById('maint-date');
+        if (dateInput) {
+          dateInput.value = new Date().toISOString().split('T')[0];
+        }
+
+        // Reset form
+        document.getElementById('maintenance-form').reset();
+        
+        // Clear errors
+        document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+        document.querySelectorAll('.form-control, .form-select').forEach(el => el.classList.remove('is-invalid'));
+
+        maintModal.show();
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      } finally {
+        window.AssetFlowLoader.hide();
+      }
+    });
+  }
+
+  // Resolve (Mark Completed) Action from Table View
+  $('#maintenance-table').on('click', '.btn-resolve', function() {
+    const role = window.RbacService.getCurrentUserRole();
+    const canApproveMaint = window.RbacService.hasPermission(role, 'approve_maintenance');
+    if (!canApproveMaint) {
+      Swal.fire('Access Denied', 'You do not have permission to resolve maintenance tasks.', 'error');
+      return;
+    }
+    const tr = $(this).closest('tr');
+    const id = tr.attr('data-id');
+
+    Swal.fire({
+      title: 'Complete Maintenance?',
+      text: `Are you sure you want to mark task ${id} as completed?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10B981',
+      cancelButtonColor: '#64748B',
+      confirmButtonText: 'Yes, complete',
+      cancelButtonText: 'Cancel'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        window.AssetFlowLoader.show();
+        try {
+          await window.ApiService.maintenance.updateStatus(id, 'Completed');
+          
+          // Sync asset state
+          const log = currentLogs.find(l => l.id === id);
+          if (log) {
+            await updateAssetMaintenanceState(log.assetId, 'Resolved');
+          }
+
+          Swal.fire({
+            title: 'Task Resolved',
+            text: 'Maintenance work marked as completed.',
+            icon: 'success',
+            confirmButtonColor: '#2563EB'
+          });
+          
+          await loadMaintenanceData();
+        } catch (err) {
+          Swal.fire('Error', err.message, 'error');
+        } finally {
+          window.AssetFlowLoader.hide();
+        }
+      }
+    });
+  });
+
+  // Modal Submit
+  const form = document.getElementById('maintenance-form');
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Clear errors
+      document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+      document.querySelectorAll('.form-control, .form-select').forEach(el => el.classList.remove('is-invalid'));
+
+      const assetSelect = document.getElementById('maint-asset-id');
+      const assetId = assetSelect.value;
+      const assetName = assetSelect.options[assetSelect.selectedIndex]?.getAttribute('data-name') || '';
+      const type = document.getElementById('maint-type').value;
+      const cost = document.getElementById('maint-cost').value;
+      const date = document.getElementById('maint-date').value;
+      const description = document.getElementById('maint-desc').value.trim();
+
+      let isValid = true;
+
+      if (!assetId) {
+        showError('maint-asset-id', 'Please select an asset.');
+        isValid = false;
+      }
+      if (!type) {
+        showError('maint-type', 'Please select maintenance type.');
+        isValid = false;
+      }
+      if (!cost || Number(cost) < 0) {
+        showError('maint-cost', 'Please enter estimated cost.');
+        isValid = false;
+      }
+      if (!date) {
+        showError('maint-date', 'Please select date.');
+        isValid = false;
+      }
+
+      if (!isValid) return;
+
+      const spinner = document.getElementById('maint-spinner');
+      const submitBtn = document.getElementById('btn-save-maintenance');
+      if (spinner) spinner.classList.remove('d-none');
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        const payload = {
+          assetId,
+          assetName,
+          type,
+          cost,
+          date,
+          description
+        };
+
+        await window.ApiService.maintenance.create(payload);
+
+        // Also change asset state to Maintenance
+        await updateAssetMaintenanceState(assetId, 'Pending');
+
+        Swal.fire({
+          title: 'Scheduled!',
+          text: 'New maintenance task scheduled successfully.',
+          icon: 'success',
+          confirmButtonColor: '#2563EB'
+        });
+
+        maintModal.hide();
+        await loadMaintenanceData();
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      } finally {
+        if (spinner) spinner.classList.add('d-none');
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    });
+  }
+}
+
+function showError(id, message) {
+  const errEl = document.getElementById(`${id}-error`);
+  const inputEl = document.getElementById(id);
+  if (errEl) errEl.textContent = message;
+  if (inputEl) inputEl.classList.add('is-invalid');
+}
+

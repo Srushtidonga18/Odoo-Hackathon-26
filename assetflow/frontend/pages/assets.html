@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AssetFlow - Asset Management</title>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- SweetAlert2 -->
+  <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
+  <!-- DataTables.js Bootstrap 5 CSS -->
+  <link href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Dynamic Loader -->
+  <div class="loader-wrapper" id="global-loader">
+    <span class="loader"></span>
+  </div>
+
+  <div class="app-wrapper">
+    <!-- Sidebar Placeholder -->
+    <div id="sidebar-placeholder"></div>
+
+    <div class="main-content">
+      <!-- Navbar Placeholder -->
+      <div id="navbar-placeholder"></div>
+
+      <!-- Main Content Area -->
+      <div class="container-fluid p-4">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <div>
+            <h2 class="fw-bold mb-0">Asset Inventory</h2>
+            <p class="text-muted mb-0">Manage hardware, software licenses, and resources</p>
+          </div>
+           <button class="btn btn-primary-custom text-white" id="btn-open-add-modal" data-permission-action="register_asset">
+            <i class="fa-solid fa-plus me-2"></i>Add Asset
+          </button>
+        </div>
+
+        <!-- Filter & Search Panel -->
+        <div class="card-custom mb-4 py-3">
+          <div class="row g-3 align-items-center">
+            <div class="col-md-4">
+              <div class="position-relative">
+                <input type="text" id="asset-search" class="form-control-custom w-100 ps-4" placeholder="Quick search assets...">
+                <i class="fa-solid fa-search position-absolute text-muted" style="right: 15px; top: 12px;"></i>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <select id="filter-type" class="form-select form-control-custom">
+                <option value="">All Types</option>
+                <option value="Hardware">Hardware</option>
+                <option value="Software">Software</option>
+                <option value="Infrastructure">Infrastructure</option>
+                <option value="Furniture">Furniture</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <select id="filter-status" class="form-select form-control-custom">
+                <option value="">All Statuses</option>
+                <option value="Active">Active</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Disposed">Disposed</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-secondary-custom w-100" id="btn-clear-filters">
+                <i class="fa-solid fa-filter-circle-xmark me-2"></i>Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assets Table Grid -->
+        <div class="table-custom-wrapper">
+          <table class="table-custom" id="assets-table">
+            <thead>
+              <tr>
+                <th>Asset ID</th>
+                <th>Asset Name</th>
+                <th>Type</th>
+                <th>Serial/License</th>
+                <th>Status</th>
+                <th>Value</th>
+                <th>Location</th>
+                <th>Assigned To</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Dynamic records injected here -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- Add/Edit Asset Modal -->
+      <div class="modal fade" id="assetModal" tabindex="-1" aria-labelledby="assetModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content" style="border-radius: var(--border-radius); border: 1px solid var(--border-color); background-color: var(--card-bg);">
+            <div class="modal-header border-bottom">
+              <h5 class="modal-title fw-bold" id="assetModalLabel">Add Asset</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="asset-form" novalidate>
+              <input type="hidden" id="asset-edit-id">
+              <div class="modal-body">
+                
+                <!-- File/Image Upload Preview -->
+                <div class="mb-3 text-center">
+                  <label class="form-label-custom d-block">Asset Photo / Document Preview</label>
+                  <div class="image-preview-container" id="asset-preview-box" style="border-radius: var(--border-radius);">
+                    <img src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&q=80&w=150" alt="Asset Photo" id="asset-img-preview">
+                  </div>
+                  <button type="button" class="btn btn-secondary-custom btn-sm" onclick="document.getElementById('asset-photo-upload').click();">
+                    <i class="fa-solid fa-camera me-2"></i>Upload Photo
+                  </button>
+                  <input type="file" id="asset-photo-upload" class="d-none" accept="image/*">
+                </div>
+
+                <div class="row g-3">
+                  <!-- Name -->
+                  <div class="col-md-6">
+                    <label for="asset-name" class="form-label-custom">Asset Name <span class="text-danger">*</span></label>
+                    <input type="text" id="asset-name" class="form-control form-control-custom" placeholder="e.g. MacBook Pro 16&quot;" required>
+                    <div class="invalid-feedback d-block mt-1" id="asset-name-error"></div>
+                  </div>
+
+                  <!-- Type -->
+                  <div class="col-md-6">
+                    <label for="asset-type" class="form-label-custom">Asset Type <span class="text-danger">*</span></label>
+                    <select id="asset-type" class="form-select form-control-custom" required>
+                      <option value="">Select type...</option>
+                      <option value="Hardware">Hardware</option>
+                      <option value="Software">Software</option>
+                      <option value="Infrastructure">Infrastructure</option>
+                      <option value="Furniture">Furniture</option>
+                    </select>
+                    <div class="invalid-feedback d-block mt-1" id="asset-type-error"></div>
+                  </div>
+
+                  <!-- Serial -->
+                  <div class="col-md-6">
+                    <label for="asset-serial" class="form-label-custom">Serial / License Number <span class="text-danger">*</span></label>
+                    <input type="text" id="asset-serial" class="form-control form-control-custom" placeholder="e.g. C02DF43SMD6R" required>
+                    <div class="invalid-feedback d-block mt-1" id="asset-serial-error"></div>
+                  </div>
+
+                  <!-- Value -->
+                  <div class="col-md-6">
+                    <label for="asset-value" class="form-label-custom">Asset Cost (USD) <span class="text-danger">*</span></label>
+                    <input type="number" id="asset-value" class="form-control form-control-custom" placeholder="e.g. 2499" min="0" required>
+                    <div class="invalid-feedback d-block mt-1" id="asset-value-error"></div>
+                  </div>
+
+                  <!-- Status -->
+                  <div class="col-md-6">
+                    <label for="asset-status" class="form-label-custom">Status</label>
+                    <select id="asset-status" class="form-select form-control-custom">
+                      <option value="Active">Active</option>
+                      <option value="Maintenance">Maintenance</option>
+                      <option value="Disposed">Disposed</option>
+                    </select>
+                  </div>
+
+                  <!-- Location -->
+                  <div class="col-md-6">
+                    <label for="asset-location" class="form-label-custom">Location</label>
+                    <input type="text" id="asset-location" class="form-control form-control-custom" placeholder="e.g. Gurugram HQ">
+                  </div>
+
+                  <!-- Owner -->
+                  <div class="col-md-12">
+                    <label for="asset-owner" class="form-label-custom">Assigned Owner (Name/Team)</label>
+                    <input type="text" id="asset-owner" class="form-control form-control-custom" placeholder="e.g. Rahul Sharma">
+                  </div>
+                </div>
+
+              </div>
+              <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary-custom" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary-custom text-white d-flex align-items-center" id="btn-save-asset">
+                  <span>Save Asset</span>
+                  <span class="spinner-border spinner-border-sm ms-2 d-none" id="asset-spinner" role="status" aria-hidden="true"></span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Placeholder -->
+      <div id="footer-placeholder"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/assets.js"></script>
+</body>
+</html>

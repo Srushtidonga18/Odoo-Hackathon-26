@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AssetFlow - Organization Setup</title>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- SweetAlert2 -->
+  <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Dynamic Loader -->
+  <div class="loader-wrapper" id="global-loader">
+    <span class="loader"></span>
+  </div>
+
+  <div class="app-wrapper">
+    <!-- Sidebar Placeholder -->
+    <div id="sidebar-placeholder"></div>
+
+    <div class="main-content">
+      <!-- Navbar Placeholder -->
+      <div id="navbar-placeholder"></div>
+
+      <!-- Main Content Area -->
+      <div class="container-fluid p-4">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <div>
+            <h2 class="fw-bold mb-0">Organization Setup</h2>
+            <p class="text-muted mb-0">Configure company-wide workspace profile and identity</p>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-xl-8 col-lg-10 mx-auto">
+            <div class="card-custom">
+              <h5 class="fw-bold mb-4 border-bottom pb-3"><i class="fa-solid fa-sitemap me-2 text-primary"></i>Company Information</h5>
+              
+              <form id="org-setup-form" novalidate>
+                
+                <!-- Logo Upload Box with Preview -->
+                <div class="mb-4 text-center">
+                  <label class="form-label-custom d-block mb-3">Organization Logo</label>
+                  <div class="image-preview-container" id="logo-preview-box">
+                    <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=150" alt="Org Logo" id="logo-img-preview">
+                  </div>
+                  <button type="button" class="btn btn-secondary-custom btn-sm" onclick="document.getElementById('org-logo-upload').click();">
+                    <i class="fa-solid fa-cloud-arrow-up me-2"></i>Upload Logo
+                  </button>
+                  <input type="file" id="org-logo-upload" class="d-none" accept="image/*">
+                  <div class="form-text small text-muted mt-2">Recommended format: PNG, SVG (Max 1MB).</div>
+                </div>
+
+                <div class="row g-3">
+                  <!-- Org Name -->
+                  <div class="col-md-6">
+                    <label for="org-name" class="form-label-custom">Organization Name <span class="text-danger">*</span></label>
+                    <input type="text" id="org-name" class="form-control form-control-custom" placeholder="e.g. Acme Corporation" required>
+                    <div class="invalid-feedback d-block mt-1" id="org-name-error"></div>
+                  </div>
+
+                  <!-- Org Code -->
+                  <div class="col-md-6">
+                    <label for="org-code" class="form-label-custom">Organization Code <span class="text-danger">*</span></label>
+                    <input type="text" id="org-code" class="form-control form-control-custom" placeholder="e.g. ACME-INC" required>
+                    <div class="invalid-feedback d-block mt-1" id="org-code-error"></div>
+                  </div>
+
+                  <!-- Industry -->
+                  <div class="col-md-6">
+                    <label for="org-industry" class="form-label-custom">Industry Type</label>
+                    <select id="org-industry" class="form-select form-control-custom">
+                      <option value="">Select industry...</option>
+                      <option value="Technology">Technology & SaaS</option>
+                      <option value="Finance">Finance & Banking</option>
+                      <option value="Healthcare">Healthcare & Biotech</option>
+                      <option value="Education">Education & E-learning</option>
+                      <option value="Manufacturing">Manufacturing & Retail</option>
+                    </select>
+                  </div>
+
+                  <!-- Website -->
+                  <div class="col-md-6">
+                    <label for="org-website" class="form-label-custom">Company Website</label>
+                    <input type="url" id="org-website" class="form-control form-control-custom" placeholder="https://company.com">
+                    <div class="invalid-feedback d-block mt-1" id="org-website-error"></div>
+                  </div>
+
+                  <!-- Phone -->
+                  <div class="col-md-6">
+                    <label for="org-phone" class="form-label-custom">Contact Phone</label>
+                    <input type="tel" id="org-phone" class="form-control form-control-custom" placeholder="+1 (555) 000-0000">
+                  </div>
+
+                  <!-- Address -->
+                  <div class="col-12">
+                    <label for="org-address" class="form-label-custom">Headquarters Address</label>
+                    <textarea id="org-address" rows="3" class="form-control form-control-custom" placeholder="123 Corporate Blvd, Suite 100, City, State, Country"></textarea>
+                  </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+                  <button type="reset" class="btn btn-secondary-custom">
+                    Discard Changes
+                  </button>
+                  <button type="submit" class="btn btn-primary-custom text-white d-flex align-items-center" id="btn-save-org">
+                    <span>Save Settings</span>
+                    <span class="spinner-border spinner-border-sm ms-2 d-none" id="org-spinner" role="status" aria-hidden="true"></span>
+                  </button>
+                </div>
+
+              </form>
+            </div>
+
+            <!-- Department Head Assignments Card -->
+            <div class="card-custom mt-4 shadow-sm" id="dept-heads-assignment-card" style="display: none;">
+              <h5 class="fw-bold mb-3 border-bottom pb-3"><i class="fa-solid fa-user-shield me-2 text-primary"></i>Department Head Assignments</h5>
+              <p class="text-muted small mb-4">Assign exactly one Department Head for each department. Reassigning a department's head will automatically demote the old head to an Employee role.</p>
+              <div class="table-custom-wrapper">
+                <table class="table-custom mb-0">
+                  <thead>
+                    <tr>
+                      <th>Department</th>
+                      <th>Current Head</th>
+                      <th>Assign New Head</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dept-heads-table-body">
+                    <!-- Dynamically populated -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Placeholder -->
+      <div id="footer-placeholder"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/org-setup.js"></script>
+</body>
+</html>

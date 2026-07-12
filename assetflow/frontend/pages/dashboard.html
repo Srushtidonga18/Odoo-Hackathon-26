@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AssetFlow - Dashboard</title>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- SweetAlert2 -->
+  <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Dynamic Loader -->
+  <div class="loader-wrapper" id="global-loader">
+    <span class="loader"></span>
+  </div>
+
+  <div class="app-wrapper">
+    <!-- Sidebar Placeholder -->
+    <div id="sidebar-placeholder"></div>
+
+    <div class="main-content">
+      <!-- Navbar Placeholder -->
+      <div id="navbar-placeholder"></div>
+
+      <!-- Main Content Area -->
+      <div class="container-fluid p-4">
+        
+        <!-- Welcome banner / Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <div>
+            <h2 class="fw-bold mb-0" id="dashboard-welcome-title">Welcome Back</h2>
+            <p class="text-muted mb-0" id="dashboard-welcome-desc">Real-time status of enterprise assets & bookings</p>
+          </div>
+          <div class="d-flex gap-2" id="dashboard-header-actions">
+            <button class="btn btn-secondary-custom" onclick="location.reload();">
+              <i class="fa-solid fa-rotate me-2"></i>Refresh Data
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Actions Panel -->
+        <div class="card-custom mb-4 d-none" id="quick-actions-card">
+          <h5 class="fw-bold mb-3"><i class="fa-solid fa-bolt me-2 text-warning"></i>Quick Actions</h5>
+          <div class="d-flex flex-wrap gap-2.5" id="quick-actions-container">
+            <!-- Dynamic Actions -->
+          </div>
+        </div>
+
+        <!-- KPI Statistic Cards -->
+        <div class="row g-4 mb-4" id="kpi-cards-container">
+          <!-- Dynamic KPI Cards -->
+        </div>
+
+        <!-- Charts Placeholders -->
+        <div class="row g-4 mb-4" id="charts-container">
+          <!-- Dynamic Charts -->
+        </div>
+
+        <!-- Recent Activities & Details Row -->
+        <div class="row g-4 mb-4" id="details-row-container">
+          <!-- Loaded dynamically -->
+        </div>
+
+      </div>
+
+      <!-- Footer Placeholder -->
+      <div id="footer-placeholder"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <!-- Axios & SweetAlert2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Bootstrap 5 Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Custom Application Scripts -->
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/dashboard.js"></script>
+</body>
+</html>

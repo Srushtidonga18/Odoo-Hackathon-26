@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AssetFlow - Allocations & Transfers</title>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- SweetAlert2 -->
+  <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
+  <!-- DataTables.js CSS -->
+  <link href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Dynamic Loader -->
+  <div class="loader-wrapper" id="global-loader">
+    <span class="loader"></span>
+  </div>
+
+  <div class="app-wrapper">
+    <!-- Sidebar Placeholder -->
+    <div id="sidebar-placeholder"></div>
+
+    <div class="main-content">
+      <!-- Navbar Placeholder -->
+      <div id="navbar-placeholder"></div>
+
+      <!-- Main Content Area -->
+      <div class="container-fluid p-4">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <div>
+            <h2 class="fw-bold mb-0">Asset Allocations</h2>
+            <p class="text-muted mb-0">Track assignments, loans, and team-to-team asset transfers</p>
+          </div>
+          <button class="btn btn-primary-custom text-white" id="btn-open-alloc-modal">
+            <i class="fa-solid fa-plus me-2"></i>New Allocation Request
+          </button>
+        </div>
+
+        <div class="row g-4">
+          <!-- Allocation & Transfer Workspace (Screen 5 Mockup) -->
+          <div class="col-lg-5">
+            <div class="card-custom h-100 mb-0">
+              <h5 class="fw-bold mb-3"><i class="fa-solid fa-exchange-alt text-primary me-2"></i>Allocation & Transfer Workspace</h5>
+              
+              <!-- Select Asset -->
+              <div class="mb-3">
+                <label for="workspace-asset-select" class="form-label-custom">Select Asset</label>
+                <select id="workspace-asset-select" class="form-select form-control-custom">
+                  <!-- Dynamic asset options -->
+                </select>
+              </div>
+
+              <!-- Conflict Alert (Red box) -->
+              <div class="alert alert-danger p-3 rounded-3 d-none" id="workspace-alloc-conflict-card" style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #EF4444;">
+                <div class="d-flex align-items-start gap-2">
+                  <i class="fa-solid fa-triangle-exclamation mt-1"></i>
+                  <div>
+                    <div class="fw-bold" id="workspace-conflict-message">Already Allocated to Priya shah (Engineering)</div>
+                    <div class="small">Direct re-allocation is blocked - submit a transfer request below</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Standard Allocation Form -->
+              <div id="workspace-standard-alloc-form" class="d-none">
+                <div class="mb-3">
+                  <label for="workspace-alloc-to" class="form-label-custom">Allocate To (Employee)</label>
+                  <input type="text" id="workspace-alloc-to" class="form-control form-control-custom" placeholder="Enter employee name...">
+                </div>
+                <div class="mb-3">
+                  <label for="workspace-alloc-date" class="form-label-custom">Expected Return Date</label>
+                  <input type="date" id="workspace-alloc-date" class="form-control form-control-custom">
+                </div>
+                <button class="btn btn-primary-custom text-white w-100 py-2.5" id="btn-submit-workspace-alloc">
+                  <i class="fa-solid fa-check me-2"></i>Allocate Asset
+                </button>
+              </div>
+
+              <!-- Transfer Request Form (Active when conflict) -->
+              <div id="workspace-transfer-form" class="d-none">
+                <h6 class="fw-bold text-muted border-bottom pb-2 mb-3">Transfer Request</h6>
+                <div class="row g-2 mb-3">
+                  <div class="col-6">
+                    <label class="form-label-custom text-muted small">From</label>
+                    <input type="text" id="workspace-transfer-from" class="form-control form-control-custom" readonly>
+                  </div>
+                  <div class="col-6">
+                    <label for="workspace-transfer-to" class="form-label-custom text-muted small">To</label>
+                    <select id="workspace-transfer-to" class="form-select form-control-custom">
+                      <!-- Dynamic list of employees -->
+                    </select>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label for="workspace-transfer-reason" class="form-label-custom text-muted small">Reason</label>
+                  <textarea id="workspace-transfer-reason" rows="3" class="form-control form-control-custom" placeholder="Why is this transfer needed?"></textarea>
+                </div>
+                <button class="btn btn-primary-custom text-white w-100 py-2.5" id="btn-submit-workspace-transfer">
+                  <i class="fa-solid fa-paper-plane me-2"></i>Submit Request
+                </button>
+              </div>
+
+              <!-- Allocation History Section -->
+              <div class="mt-4 pt-3 border-top d-none" id="workspace-alloc-history-section">
+                <h6 class="fw-bold mb-3">Allocation history</h6>
+                <div id="workspace-alloc-history-list" class="small text-muted d-flex flex-column gap-2">
+                  <!-- e.g. "Mar 12 - Allocated to Priya shah - Engineering" -->
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Active Allocations Table (Right column) -->
+          <div class="col-lg-7">
+            <div class="card-custom mb-0 h-100">
+              <h5 class="fw-bold mb-3"><i class="fa-solid fa-list text-primary me-2"></i>Active Requests Ledger</h5>
+              <div class="table-custom-wrapper">
+                <table class="table-custom" id="allocations-table">
+                  <thead>
+                    <tr>
+                      <th>Request ID</th>
+                      <th>Asset ID</th>
+                      <th>Asset Name</th>
+                      <th>Allocated To</th>
+                      <th>Allocation Date</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Injected dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- New Allocation Modal -->
+      <div class="modal fade" id="allocModal" tabindex="-1" aria-labelledby="allocModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content" style="border-radius: var(--border-radius); border: 1px solid var(--border-color); background-color: var(--card-bg);">
+            <div class="modal-header border-bottom">
+              <h5 class="modal-title fw-bold" id="allocModalLabel">New Allocation Request</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="alloc-form" novalidate>
+              <div class="modal-body">
+                
+                <div class="mb-3">
+                  <label for="alloc-asset-id" class="form-label-custom">Select Asset <span class="text-danger">*</span></label>
+                  <select id="alloc-asset-id" class="form-select form-control-custom" required>
+                    <option value="">Select asset to allocate...</option>
+                    <!-- Injected dynamically from assets inventory -->
+                  </select>
+                  <div class="invalid-feedback d-block mt-1" id="alloc-asset-id-error"></div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="alloc-to" class="form-label-custom">Allocate To (Employee Name/Email) <span class="text-danger">*</span></label>
+                  <input type="text" id="alloc-to" class="form-control form-control-custom" placeholder="e.g. John Doe" required>
+                  <div class="invalid-feedback d-block mt-1" id="alloc-to-error"></div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="alloc-date" class="form-label-custom">Allocation Date <span class="text-danger">*</span></label>
+                  <input type="date" id="alloc-date" class="form-control form-control-custom" required>
+                  <div class="invalid-feedback d-block mt-1" id="alloc-date-error"></div>
+                </div>
+
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" id="alloc-terms" required>
+                  <label class="form-check-label text-muted small" for="alloc-terms">
+                    I confirm that this allocation adheres to the company asset usage policy.
+                  </label>
+                  <div class="invalid-feedback d-block mt-1" id="alloc-terms-error"></div>
+                </div>
+
+              </div>
+              <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary-custom" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary-custom text-white d-flex align-items-center" id="btn-save-alloc">
+                  <span>Submit Request</span>
+                  <span class="spinner-border spinner-border-sm ms-2 d-none" id="alloc-spinner" role="status" aria-hidden="true"></span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Placeholder -->
+      <div id="footer-placeholder"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/allocation.js"></script>
+</body>
+</html>

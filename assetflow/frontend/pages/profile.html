@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AssetFlow - User Profile</title>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- SweetAlert2 -->
+  <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Dynamic Loader -->
+  <div class="loader-wrapper" id="global-loader">
+    <span class="loader"></span>
+  </div>
+
+  <div class="app-wrapper">
+    <!-- Sidebar Placeholder -->
+    <div id="sidebar-placeholder"></div>
+
+    <div class="main-content">
+      <!-- Navbar Placeholder -->
+      <div id="navbar-placeholder"></div>
+
+      <!-- Main Content Area -->
+      <div class="container-fluid p-4">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <div>
+            <h2 class="fw-bold mb-0">User Profile</h2>
+            <p class="text-muted mb-0">Manage your administrative credentials and security settings</p>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <!-- Profile Quick Details Side Card -->
+          <div class="col-lg-4">
+            <div class="card-custom text-center py-4">
+              <!-- Avatar with upload button -->
+              <div class="image-preview-container" style="width: 140px; height: 140px; border-radius: 50%; border: 3px solid var(--border-color);">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200" alt="Avatar" id="profile-card-img">
+              </div>
+              <button class="btn btn-secondary-custom btn-sm mb-3" onclick="document.getElementById('profile-avatar-upload').click();">
+                <i class="fa-solid fa-camera me-1"></i>Change Picture
+              </button>
+              <input type="file" id="profile-avatar-upload" class="d-none" accept="image/*">
+
+              <h4 class="fw-bold mb-1" id="profile-card-name">Jane Doe</h4>
+              <p class="text-muted small mb-3" id="profile-card-role">Administrator</p>
+              <div class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1.5" id="profile-card-email">jane.doe@assetflow.com</div>
+            </div>
+          </div>
+
+          <!-- Forms Section (Profile Edit & Password reset) -->
+          <div class="col-lg-8">
+            <div class="card-custom p-0 overflow-hidden">
+              <!-- Tab Headers -->
+              <ul class="nav nav-tabs px-3 pt-3 border-bottom bg-light-custom" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active fw-bold text-dark-custom py-2.5" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab" aria-controls="details" aria-selected="true" style="border: none; border-bottom: 2px solid transparent; background: transparent; color: var(--text-color);">
+                    <i class="fa-solid fa-user-gear me-2"></i>My Details
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link fw-bold text-dark-custom py-2.5" id="security-tab" data-bs-toggle="tab" data-bs-target="#security" type="button" role="tab" aria-controls="security" aria-selected="false" style="border: none; border-bottom: 2px solid transparent; background: transparent; color: var(--text-color);">
+                    <i class="fa-solid fa-shield-halved me-2"></i>Security & Password
+                  </button>
+                </li>
+              </ul>
+
+              <!-- Tab Contents -->
+              <div class="tab-content p-4" id="profileTabsContent">
+                <!-- Details Form -->
+                <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="details-tab">
+                  <form id="profile-details-form" novalidate>
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label for="profile-name" class="form-label-custom">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" id="profile-name" class="form-control form-control-custom" required>
+                        <div class="invalid-feedback d-block mt-1" id="profile-name-error"></div>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="profile-email" class="form-label-custom">Contact Email <span class="text-danger">*</span></label>
+                        <input type="email" id="profile-email" class="form-control form-control-custom" required>
+                        <div class="invalid-feedback d-block mt-1" id="profile-email-error"></div>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="profile-phone" class="form-label-custom">Phone Number</label>
+                        <input type="tel" id="profile-phone" class="form-control form-control-custom" placeholder="+1 (555) 000-0000">
+                      </div>
+                      <div class="col-md-6">
+                        <label for="profile-title" class="form-label-custom">Job Title / Department</label>
+                        <input type="text" id="profile-title" class="form-control form-control-custom" placeholder="e.g. IT Operations Specialist">
+                      </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-top d-flex justify-content-end">
+                      <button type="submit" class="btn btn-primary-custom text-white" id="btn-save-profile">Save Details</button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- Security Form (Change Password) -->
+                <div class="tab-pane fade" id="security" role="tabpanel" aria-labelledby="security-tab">
+                  <form id="profile-password-form" novalidate>
+                    <div class="row g-3">
+                      <div class="col-12">
+                        <label for="current-password" class="form-label-custom">Current Password <span class="text-danger">*</span></label>
+                        <input type="password" id="current-password" class="form-control form-control-custom" required>
+                        <div class="invalid-feedback d-block mt-1" id="current-password-error"></div>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="password" class="form-label-custom">New Password <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                          <input type="password" id="password" class="form-control form-control-custom border-end-0" required style="border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);">
+                          <button type="button" class="btn btn-outline-secondary border bg-white" id="password-toggle" style="border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0; border: 1px solid var(--border-color);"><i class="fa-solid fa-eye text-muted"></i></button>
+                        </div>
+                        <div class="invalid-feedback d-block mt-1" id="password-error"></div>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="confirm-password" class="form-label-custom">Confirm New Password <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                          <input type="password" id="confirm-password" class="form-control form-control-custom border-end-0" required style="border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);">
+                          <button type="button" class="btn btn-outline-secondary border bg-white" id="confirm-password-toggle" style="border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0; border: 1px solid var(--border-color);"><i class="fa-solid fa-eye text-muted"></i></button>
+                        </div>
+                        <div class="invalid-feedback d-block mt-1" id="confirm-password-error"></div>
+                      </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-top d-flex justify-content-end">
+                      <button type="submit" class="btn btn-primary-custom text-white" id="btn-save-password">Update Password</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Placeholder -->
+      <div id="footer-placeholder"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/components.js"></script>
+  <script src="../assets/js/profile.js"></script>
+</body>
+</html>
