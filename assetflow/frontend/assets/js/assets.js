@@ -5,11 +5,16 @@
 
 let assetsTable = null;
 let assetModal = null;
+let requestModal = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   window.AssetFlowLoader.show();
   try {
     assetModal = new bootstrap.Modal(document.getElementById('assetModal'));
+    const reqModalEl = document.getElementById('requestModal');
+    if (reqModalEl) {
+      requestModal = new bootstrap.Modal(reqModalEl);
+    }
     await loadAssets();
     setupEventListeners();
   } catch (err) {
@@ -21,7 +26,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadAssets() {
   try {
-    const assets = await window.ApiService.assets.list();
+    let assets = await window.ApiService.assets.list();
+    const role = window.RbacService.getCurrentUserRole();
+    if (role === 'Employee') {
+      const user = window.RbacService.getCurrentUser();
+      const userName = (user ? (user.fullName || user.name) : '').toLowerCase();
+      assets = assets.filter(a => a.owner && a.owner.toLowerCase() === userName);
+    }
     renderAssetsTable(assets);
   } catch (err) {
     console.error(err);
@@ -325,6 +336,89 @@ function setupEventListeners() {
 
         assetModal.hide();
         await loadAssets();
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      } finally {
+        if (spinner) spinner.classList.add('d-none');
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    });
+  }
+
+  // Request Modal open
+  const requestBtn = document.getElementById('btn-open-request-modal');
+  if (requestBtn) {
+    requestBtn.addEventListener('click', () => {
+      document.getElementById('request-asset-form').reset();
+      
+      // Clear errors
+      document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+      document.querySelectorAll('.form-control, .form-select').forEach(el => el.classList.remove('is-invalid'));
+
+      // Set default needed date to tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      document.getElementById('request-needed-date').value = tomorrow.toISOString().split('T')[0];
+
+      requestModal.show();
+    });
+  }
+
+  // Request Asset submit
+  const requestForm = document.getElementById('request-asset-form');
+  if (requestForm) {
+    requestForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Clear errors
+      document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+      document.querySelectorAll('.form-control, .form-select').forEach(el => el.classList.remove('is-invalid'));
+
+      const type = document.getElementById('request-asset-type').value;
+      const date = document.getElementById('request-needed-date').value;
+      const reason = document.getElementById('request-reason').value.trim();
+
+      let isValid = true;
+
+      if (!type) {
+        showError('request-asset-type', 'Please select asset category.');
+        isValid = false;
+      }
+      if (!date) {
+        showError('request-needed-date', 'Please select needed date.');
+        isValid = false;
+      }
+      if (!reason) {
+        showError('request-reason', 'Reason is required.');
+        isValid = false;
+      }
+
+      if (!isValid) return;
+
+      const spinner = document.getElementById('request-spinner');
+      const submitBtn = document.getElementById('btn-submit-request');
+      if (spinner) spinner.classList.remove('d-none');
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        const user = window.RbacService.getCurrentUser();
+        const payload = {
+          assetId: null, // Indicates a generic request
+          assetName: type,
+          allocatedTo: user.fullName || user.name,
+          date
+        };
+
+        await window.ApiService.allocations.create(payload);
+
+        Swal.fire({
+          title: 'Request Submitted',
+          text: `Asset request for "${type}" has been submitted for review.`,
+          icon: 'success',
+          confirmButtonColor: '#2563EB'
+        });
+
+        requestModal.hide();
       } catch (err) {
         Swal.fire('Error', err.message, 'error');
       } finally {

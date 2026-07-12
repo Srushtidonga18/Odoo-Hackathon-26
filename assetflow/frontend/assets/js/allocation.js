@@ -192,7 +192,7 @@ function renderAllocationsTable(allocations) {
     html += `
       <tr data-id="${alloc.id}">
         <td><strong class="text-primary">${alloc.id}</strong></td>
-        <td><strong>${alloc.assetId}</strong></td>
+        <td><strong>${alloc.assetId || '<span class="badge bg-light text-muted border rounded-pill px-2 py-0.5">Generic</span>'}</strong></td>
         <td>
           <div class="fw-semibold text-dark-custom" style="color: var(--text-color);">${alloc.assetName}</div>
         </td>
@@ -380,7 +380,7 @@ async function setupEventListeners() {
   }
 
   // Approval/Rejection Actions
-  $('#allocations-table').on('click', '.btn-action', function() {
+  $('#allocations-table').on('click', '.btn-action', async function() {
     const role = window.RbacService.getCurrentUserRole();
     const canApprove = (role === 'Admin' || role === 'Asset Manager' || role === 'AssetManager' || role === 'Department Head' || role === 'DepartmentHead');
     if (!canApprove) {
@@ -391,79 +391,127 @@ async function setupEventListeners() {
     const id = tr.attr('data-id');
     const action = $(this).attr('data-action');
 
-    let confirmTitle = 'Approve Request?';
-    let confirmText = `Are you sure you want to approve allocation request ${id}?`;
-    let confirmColor = '#10B981';
+    try {
+      const currentAllocations = await window.ApiService.allocations.list();
+      const targetAlloc = currentAllocations.find(a => String(a.id) === String(id));
+      if (!targetAlloc) {
+        Swal.fire('Error', 'Allocation request not found.', 'error');
+        return;
+      }
 
-    if (action === 'Rejected') {
-      confirmTitle = 'Reject Request?';
-      confirmText = `Are you sure you want to reject allocation request ${id}?`;
-      confirmColor = '#EF4444';
-    } else if (action === 'Returned') {
-      confirmTitle = 'Mark as Returned?';
-      confirmText = `Confirm that asset associated with request ${id} has been returned to stock.`;
-      confirmColor = '#3B82F6';
-    }
+      // Check if it is a generic request (no specific asset assigned yet)
+      if (action === 'Approved' && (!targetAlloc.assetId || targetAlloc.assetId === 'null' || targetAlloc.assetId === 'Generic')) {
+        // Fetch available assets
+        const assetsList = await window.ApiService.assets.list();
+        const availableAssets = assetsList.filter(a => !a.owner && a.status !== 'Disposed');
+        
+        if (availableAssets.length === 0) {
+          Swal.fire('No Assets Available', 'There are no available assets in the inventory to allocate.', 'warning');
+          return;
+        }
 
-    Swal.fire({
-      title: confirmTitle,
-      text: confirmText,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: confirmColor,
-      cancelButtonColor: '#64748B',
-      confirmButtonText: 'Yes, proceed',
-      cancelButtonText: 'Cancel'
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        window.AssetFlowLoader.show();
-        try {
-          // If returned, clear owner in assets database
-          if (action === 'Returned') {
-            const currentAllocations = await window.ApiService.allocations.list();
-            const targetAlloc = currentAllocations.find(a => String(a.id) === String(id));
-            if (targetAlloc) {
-              const assets = JSON.parse(localStorage.getItem('mock_assets') || '[]');
-              const targetAsset = assets.find(a => String(a.id) === String(targetAlloc.assetId));
-              if (targetAsset) {
-                targetAsset.owner = '';
-                localStorage.setItem('mock_assets', JSON.stringify(assets));
-              }
-            }
-          } else if (action === 'Approved') {
-            // Transfer/Approval approved: make owner match targetEmployee
-            const currentAllocations = await window.ApiService.allocations.list();
-            const targetAlloc = currentAllocations.find(a => String(a.id) === String(id));
-            if (targetAlloc) {
-              const assets = JSON.parse(localStorage.getItem('mock_assets') || '[]');
-              const targetAsset = assets.find(a => String(a.id) === String(targetAlloc.assetId));
-              if (targetAsset) {
-                targetAsset.owner = targetAlloc.allocatedTo;
-                localStorage.setItem('mock_assets', JSON.stringify(assets));
-              }
+        const inputOptions = {};
+        availableAssets.forEach(a => {
+          inputOptions[a.id] = `${a.id} - ${a.name} (${a.type})`;
+        });
+
+        const { value: selectedAssetId } = await Swal.fire({
+          title: 'Assign Specific Asset',
+          text: `Select an available asset to assign for this request:`,
+          input: 'select',
+          inputOptions: inputOptions,
+          inputPlaceholder: 'Select an asset',
+          showCancelButton: true,
+          confirmButtonColor: '#10B981',
+          confirmButtonText: 'Approve & Assign',
+          cancelButtonColor: '#64748B',
+          inputValidator: (value) => {
+            if (!value) {
+              return 'You must select an asset to approve.';
             }
           }
+        });
 
-          await window.ApiService.allocations.action(id, action);
+        if (!selectedAssetId) return; // User cancelled
+
+        window.AssetFlowLoader.show();
+        try {
+          await window.ApiService.allocations.action(id, 'Approved', selectedAssetId);
           
           Swal.fire({
             title: 'Success',
-            text: `Allocation request ${action.toLowerCase()} successfully.`,
+            text: `Allocation request approved and asset ${selectedAssetId} assigned successfully.`,
             icon: 'success',
             confirmButtonColor: '#2563EB'
           });
           
           await loadAllocations();
           await initializeWorkspace();
-          // Reset workspace view
-          handleAssetSelection(workspaceAssetSelect.value);
+          const workspaceAssetSelect = document.getElementById('workspace-asset-select');
+          if (workspaceAssetSelect) {
+            handleAssetSelection(workspaceAssetSelect.value);
+          }
         } catch (err) {
           Swal.fire('Error', err.message, 'error');
         } finally {
           window.AssetFlowLoader.hide();
         }
+        return;
       }
-    });
+
+      // Standard Approval/Rejection/Return flow
+      let confirmTitle = 'Approve Request?';
+      let confirmText = `Are you sure you want to approve allocation request ${id}?`;
+      let confirmColor = '#10B981';
+
+      if (action === 'Rejected') {
+        confirmTitle = 'Reject Request?';
+        confirmText = `Are you sure you want to reject allocation request ${id}?`;
+        confirmColor = '#EF4444';
+      } else if (action === 'Returned') {
+        confirmTitle = 'Mark as Returned?';
+        confirmText = `Confirm that asset associated with request ${id} has been returned to stock.`;
+        confirmColor = '#3B82F6';
+      }
+
+      Swal.fire({
+        title: confirmTitle,
+        text: confirmText,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: confirmColor,
+        cancelButtonColor: '#64748B',
+        confirmButtonText: 'Yes, proceed',
+        cancelButtonText: 'Cancel'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          window.AssetFlowLoader.show();
+          try {
+            await window.ApiService.allocations.action(id, action);
+            
+            Swal.fire({
+              title: 'Success',
+              text: `Allocation request ${action.toLowerCase()} successfully.`,
+              icon: 'success',
+              confirmButtonColor: '#2563EB'
+            });
+            
+            await loadAllocations();
+            await initializeWorkspace();
+            const workspaceAssetSelect = document.getElementById('workspace-asset-select');
+            if (workspaceAssetSelect) {
+              handleAssetSelection(workspaceAssetSelect.value);
+            }
+          } catch (err) {
+            Swal.fire('Error', err.message, 'error');
+          } finally {
+            window.AssetFlowLoader.hide();
+          }
+        }
+      });
+    } catch (e) {
+      Swal.fire('Error', e.message, 'error');
+    }
   });
 
   // Modal Submit (Legacy)

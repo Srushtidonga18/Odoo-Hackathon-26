@@ -72,10 +72,12 @@ function setupLoginForm() {
   window.fillCreds = (email) => {
     const emailInput = document.getElementById('email');
     const passInput = document.getElementById('password');
-    if (emailInput && passInput) {
+    if (emailInput) {
       emailInput.value = email;
-      passInput.value = 'Password123!';
-      form.dispatchEvent(new Event('submit'));
+      if (passInput) {
+        passInput.value = '';
+        passInput.focus();
+      }
     }
   };
 
@@ -181,6 +183,19 @@ function setupLoginForm() {
 function setupSignupForm() {
   const form = document.getElementById('signup-form');
   if (!form) return;
+
+  // Load departments dynamically from MySQL database
+  const loadDepts = async () => {
+    const select = document.getElementById('department');
+    if (!select) return;
+    try {
+      const depts = await window.ApiService.departments.list();
+      select.innerHTML = depts.map(d => `<option value="${d.name.replace(/"/g, '&quot;')}">${d.name}</option>`).join('');
+    } catch (err) {
+      console.error("Failed to load departments:", err);
+    }
+  };
+  loadDepts();
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();

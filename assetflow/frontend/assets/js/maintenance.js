@@ -11,6 +11,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.AssetFlowLoader.show();
   try {
     maintModal = new bootstrap.Modal(document.getElementById('maintenanceModal'));
+    const role = window.RbacService.getCurrentUserRole();
+    const openModalBtn = document.getElementById('btn-open-maintenance-modal');
+    if (role === 'Employee' && openModalBtn) {
+      openModalBtn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i>Report Issue';
+    }
     await loadMaintenanceData();
     setupEventListeners();
   } catch (err) {
@@ -22,7 +27,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadMaintenanceData() {
   try {
-    currentLogs = await window.ApiService.maintenance.list();
+    let logs = await window.ApiService.maintenance.list();
+    const role = window.RbacService.getCurrentUserRole();
+    if (role === 'Employee') {
+      const user = window.RbacService.getCurrentUser();
+      const userName = (user ? (user.fullName || user.name) : '').toLowerCase();
+      // Fetch assets to see what this employee owns
+      const assets = await window.ApiService.assets.list();
+      const myAssetIds = new Set(assets.filter(a => a.owner && a.owner.toLowerCase() === userName).map(a => a.id));
+      logs = logs.filter(l => myAssetIds.has(l.assetId));
+    }
+    currentLogs = logs;
     
     // 1. Calculate statistics
     const pendingCount = currentLogs.filter(l => l.status === 'Pending').length;
@@ -298,10 +313,17 @@ async function setupEventListeners() {
     openModalBtn.addEventListener('click', async () => {
       window.AssetFlowLoader.show();
       try {
-        const assets = await window.ApiService.assets.list();
+        let assets = await window.ApiService.assets.list();
+        const role = window.RbacService.getCurrentUserRole();
+        if (role === 'Employee') {
+          const user = window.RbacService.getCurrentUser();
+          const userName = (user ? (user.fullName || user.name) : '').toLowerCase();
+          assets = assets.filter(a => a.owner && a.owner.toLowerCase() === userName);
+        }
+
         const select = document.getElementById('maint-asset-id');
         if (select) {
-          let optionsHtml = '<option value="">Select asset to schedule...</option>';
+          let optionsHtml = role === 'Employee' ? '<option value="">Select your asset...</option>' : '<option value="">Select asset to schedule...</option>';
           assets.forEach(asset => {
             optionsHtml += `<option value="${asset.id}" data-name="${asset.name}">${asset.id} - ${asset.name} (${asset.status})</option>`;
           });
@@ -320,6 +342,26 @@ async function setupEventListeners() {
         // Clear errors
         document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
         document.querySelectorAll('.form-control, .form-select').forEach(el => el.classList.remove('is-invalid'));
+
+        // Customize labels and cost container visibility
+        const titleEl = document.getElementById('maintenanceModalLabel');
+        if (titleEl) {
+          titleEl.textContent = role === 'Employee' ? 'Report Asset Issue' : 'Schedule Maintenance';
+        }
+        const submitBtnText = document.querySelector('#btn-save-maintenance span');
+        if (submitBtnText) {
+          submitBtnText.textContent = role === 'Employee' ? 'Submit Report' : 'Schedule Task';
+        }
+        const costContainer = document.getElementById('maint-cost')?.closest('.mb-3');
+        if (costContainer) {
+          if (role === 'Employee') {
+            costContainer.classList.add('d-none');
+            document.getElementById('maint-cost').value = '0';
+          } else {
+            costContainer.classList.remove('d-none');
+            document.getElementById('maint-cost').value = '';
+          }
+        }
 
         maintModal.show();
       } catch (err) {
@@ -407,9 +449,12 @@ async function setupEventListeners() {
         showError('maint-type', 'Please select maintenance type.');
         isValid = false;
       }
-      if (!cost || Number(cost) < 0) {
-        showError('maint-cost', 'Please enter estimated cost.');
-        isValid = false;
+      const role = window.RbacService.getCurrentUserRole();
+      if (role !== 'Employee') {
+        if (!cost || Number(cost) < 0) {
+          showError('maint-cost', 'Please enter estimated cost.');
+          isValid = false;
+        }
       }
       if (!date) {
         showError('maint-date', 'Please select date.');
@@ -439,8 +484,8 @@ async function setupEventListeners() {
         await updateAssetMaintenanceState(assetId, 'Pending');
 
         Swal.fire({
-          title: 'Scheduled!',
-          text: 'New maintenance task scheduled successfully.',
+          title: role === 'Employee' ? 'Report Submitted!' : 'Scheduled!',
+          text: role === 'Employee' ? 'Asset issue reported successfully and is pending review.' : 'New maintenance task scheduled successfully.',
           icon: 'success',
           confirmButtonColor: '#2563EB'
         });

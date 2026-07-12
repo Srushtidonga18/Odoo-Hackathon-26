@@ -10,12 +10,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupLogoPreview();
     setupOrgFormSubmit();
 
-    // Show Department Head Assignment control panel for Admins
+    // Show Department & Department Head Assignment panels for Admins
     const currentUser = window.RbacService.getCurrentUser() || {};
     if (currentUser.role === 'Admin') {
+      const deptCard = document.getElementById('dept-admin-section');
+      if (deptCard) deptCard.style.display = 'block';
+      await loadDepartmentsList();
+
       const card = document.getElementById('dept-heads-assignment-card');
       if (card) card.style.display = 'block';
       await loadDeptHeads();
+      await loadTransitionHistory();
+
+      setupDeptFormSubmit();
     }
   } catch (err) {
     console.error(err);
@@ -169,16 +176,14 @@ async function loadDeptHeads() {
 
   try {
     const users = await window.ApiService.users.list();
-    const departments = [
-      { id: 'IT', name: 'IT & Infrastructure' },
-      { id: 'Engineering', name: 'Engineering' },
-      { id: 'Human Resources', name: 'Human Resources' },
-      { id: 'Marketing', name: 'Marketing' },
-      { id: 'Finance', name: 'Finance' }
-    ];
+    const dynamicDepts = await window.ApiService.departments.list();
+    const departments = dynamicDepts.map(d => ({ id: d.name, name: d.name }));
 
-    // Filter candidates (non-admins, non-managers)
-    const candidates = users.filter(u => u.role === 'Employee' || u.role === 'Department Head' || u.role === 'DepartmentHead');
+    // Filter candidates (non-admins, non-managers, and active only)
+    const candidates = users.filter(u => 
+      (u.role === 'Employee' || u.role === 'Department Head' || u.role === 'DepartmentHead') &&
+      (!u.status || u.status === 'Active')
+    );
 
     let html = '';
     departments.forEach(dept => {
@@ -216,6 +221,63 @@ async function loadDeptHeads() {
 }
 
 window.assignDeptHead = async (deptId, newEmail, oldEmail) => {
+  let transitionStatus = 'Employee';
+  let transitionDetails = '';
+
+  // Prompt for transition if replacing an existing head with a different one
+  if (newEmail && oldEmail && newEmail !== oldEmail) {
+    let oldHeadName = 'Current Head';
+    try {
+      const users = await window.ApiService.users.list();
+      const oldHeadUser = users.find(u => u.email === oldEmail);
+      if (oldHeadUser) {
+        oldHeadName = oldHeadUser.fullName || oldHeadUser.name || oldEmail;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    const { value: formValues, isDismissed } = await Swal.fire({
+      title: 'Transition Old Department Head',
+      html: `
+        <p class="small text-muted mb-3 text-start">You are assigning a new head. Please specify what should happen to the current head, <strong>${oldHeadName}</strong>:</p>
+        <div class="mb-3 text-start">
+          <label for="swal-transition-status" class="form-label small fw-semibold">New Status / Action</label>
+          <select id="swal-transition-status" class="form-select">
+            <option value="Employee">Demoted to Employee (Active)</option>
+            <option value="Transferred">Shifted to other city / Transferred</option>
+            <option value="Retired">Retired (Deactivates Account)</option>
+            <option value="Resigned">Resigned / Terminated (Deactivates Account)</option>
+          </select>
+        </div>
+        <div class="mb-3 text-start">
+          <label for="swal-transition-details" class="form-label small fw-semibold">Transition Details / Notes</label>
+          <textarea id="swal-transition-details" class="form-control" rows="3" placeholder="e.g., Shifted to Bangalore branch, retired with full pension..."></textarea>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Confirm Promotion',
+      confirmButtonColor: '#2563EB',
+      cancelButtonColor: '#64748B',
+      preConfirm: () => {
+        return {
+          status: document.getElementById('swal-transition-status').value,
+          details: document.getElementById('swal-transition-details').value
+        }
+      }
+    });
+
+    if (isDismissed || !formValues) {
+      // Re-load the table to revert the dropdown selection
+      await loadDeptHeads();
+      return;
+    }
+
+    transitionStatus = formValues.status;
+    transitionDetails = formValues.details;
+  }
+
   window.AssetFlowLoader.show();
   try {
     if (!newEmail && oldEmail) {
@@ -228,7 +290,7 @@ window.assignDeptHead = async (deptId, newEmail, oldEmail) => {
         confirmButtonColor: '#2563EB'
       });
     } else if (newEmail) {
-      await window.ApiService.users.updateRole(newEmail, 'Department Head', deptId);
+      await window.ApiService.users.updateRole(newEmail, 'Department Head', deptId, oldEmail, transitionStatus, transitionDetails);
       Swal.fire({
         title: 'Department Head Assigned',
         text: 'The new department head was assigned successfully.',
@@ -237,6 +299,7 @@ window.assignDeptHead = async (deptId, newEmail, oldEmail) => {
       });
     }
     await loadDeptHeads();
+    await loadTransitionHistory();
   } catch (err) {
     Swal.fire({
       title: 'Assignment Failed',
@@ -244,7 +307,115 @@ window.assignDeptHead = async (deptId, newEmail, oldEmail) => {
       icon: 'error',
       confirmButtonColor: '#2563EB'
     });
+    await loadDeptHeads();
   } finally {
     window.AssetFlowLoader.hide();
   }
 };
+
+async function loadDepartmentsList() {
+  const tbody = document.getElementById('departments-list-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = '<tr><td colspan="2" class="text-center py-3"><span class="spinner-border spinner-border-sm text-primary me-2"></span>Loading...</td></tr>';
+  try {
+    const list = await window.ApiService.departments.list();
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="2" class="text-center text-muted py-3">No departments defined.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = list.map((dept, index) => `
+      <tr>
+        <td class="fw-semibold text-muted">${index + 1}</td>
+        <td class="fw-semibold" style="color: var(--text-color);">${escapeHtml(dept.name)}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="2" class="text-center text-danger py-3">Error loading departments: ${err.message}</td></tr>`;
+  }
+}
+
+function setupDeptFormSubmit() {
+  const addDeptForm = document.getElementById('add-dept-form');
+  if (!addDeptForm) return;
+
+  addDeptForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('new-dept-name');
+    const name = input.value.trim();
+    if (!name) return;
+
+    window.AssetFlowLoader.show();
+    try {
+      await window.ApiService.departments.create(name);
+      Swal.fire({
+        title: 'Department Added',
+        text: `Department "${name}" registered successfully.`,
+        icon: 'success',
+        confirmButtonColor: '#2563EB'
+      });
+      input.value = '';
+      await loadDepartmentsList();
+      await loadDeptHeads();
+    } catch (err) {
+      Swal.fire('Error', err.message, 'error');
+    } finally {
+      window.AssetFlowLoader.hide();
+    }
+  });
+}
+
+function escapeHtml(str) {
+  return str ? str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;") : '';
+}
+
+async function loadTransitionHistory() {
+  const container = document.getElementById('dept-transitions-table-body');
+  const card = document.getElementById('dept-transitions-card');
+  if (!container || !card) return;
+
+  try {
+    const users = await window.ApiService.users.list();
+    // Filter users with status other than Active, or with transition details
+    const transitionedUsers = users.filter(u => (u.status && u.status !== 'Active') || u.transitionDetails);
+
+    if (transitionedUsers.length === 0) {
+      container.innerHTML = `
+        <tr>
+          <td colspan="5" class="text-center py-3 text-muted">No transition records found.</td>
+        </tr>
+      `;
+      card.style.display = 'block';
+      return;
+    }
+
+    let html = '';
+    transitionedUsers.forEach(u => {
+      let statusBadge = '';
+      if (u.status === 'Retired') {
+        statusBadge = '<span class="badge bg-danger-subtle text-danger rounded-pill px-2.5 py-1 fw-medium"><i class="fa-solid fa-person-cane me-1"></i>Retired</span>';
+      } else if (u.status === 'Resigned') {
+        statusBadge = '<span class="badge bg-secondary-subtle text-secondary rounded-pill px-2.5 py-1 fw-medium"><i class="fa-solid fa-door-open me-1"></i>Resigned</span>';
+      } else if (u.status === 'Transferred') {
+        statusBadge = '<span class="badge bg-warning-subtle text-warning rounded-pill px-2.5 py-1 fw-medium"><i class="fa-solid fa-plane-departure me-1"></i>Transferred</span>';
+      } else {
+        statusBadge = `<span class="badge bg-info-subtle text-info rounded-pill px-2.5 py-1 fw-medium">${escapeHtml(u.status || 'Employee')}</span>`;
+      }
+
+      html += `
+        <tr>
+          <td><strong>${escapeHtml(u.fullName || u.name)}</strong></td>
+          <td>${escapeHtml(u.email)}</td>
+          <td><span class="text-muted small">${escapeHtml(u.department || 'N/A')}</span></td>
+          <td>${statusBadge}</td>
+          <td><span class="text-muted small">${escapeHtml(u.transitionDetails || 'No details provided.')}</span></td>
+        </tr>
+      `;
+    });
+
+    container.innerHTML = html;
+    card.style.display = 'block';
+  } catch (err) {
+    console.error("Failed to load transition history:", err);
+  }
+}

@@ -4,9 +4,12 @@
  * Provides a fallback to LocalStorage for demonstration when the backend is unreachable.
  */
 
-const API_BASE_URL = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
-  ? 'http://localhost:3000/api'
-  : '/api';
+const API_BASE_URL = window.location.origin.includes('localhost') || 
+  window.location.origin.includes('127.0.0.1') || 
+  window.location.protocol === 'file:' || 
+  window.location.origin === 'null'
+    ? 'http://localhost:3000/api'
+    : '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -169,12 +172,12 @@ if (!localStorage.getItem('af_fb_initialized_v4')) {
 
   // Seed default registered users
   fallbackStore.set('registered_users', [
-    { email: 'admin@assetflow.com', password: 'Password123!', fullName: 'Rahul Sharma', role: 'Admin', department: 'Management', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100', isVerified: true },
-    { email: 'manager@assetflow.com', password: 'Password123!', fullName: 'Amit Patel', role: 'Asset Manager', department: 'Asset Management', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100', isVerified: true },
-    { email: 'it-head@assetflow.com', password: 'Password123!', fullName: 'Priya Iyer', role: 'Department Head', department: 'IT', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=100', isVerified: true },
-    { email: 'eng-head@assetflow.com', password: 'Password123!', fullName: 'Vikram Malhotra', role: 'Department Head', department: 'Engineering', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100', isVerified: true },
-    { email: 'mkt-head@assetflow.com', password: 'Password123!', fullName: 'Neha Sharma', role: 'Department Head', department: 'Marketing', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=100', isVerified: true },
-    { email: 'employee@assetflow.com', password: 'Password123!', fullName: 'Arjun Nair', role: 'Employee', department: 'IT', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=100', isVerified: true }
+    { email: 'admin@assetflow.com', password: 'Password123!', fullName: 'Rahul Sharma', role: 'Admin', department: 'Management', avatar: '', isVerified: true },
+    { email: 'manager@assetflow.com', password: 'Password123!', fullName: 'Amit Patel', role: 'Asset Manager', department: 'Asset Management', avatar: '', isVerified: true },
+    { email: 'it-head@assetflow.com', password: 'Password123!', fullName: 'Priya Iyer', role: 'Department Head', department: 'IT', avatar: '', isVerified: true },
+    { email: 'eng-head@assetflow.com', password: 'Password123!', fullName: 'Vikram Malhotra', role: 'Department Head', department: 'Engineering', avatar: '', isVerified: true },
+    { email: 'mkt-head@assetflow.com', password: 'Password123!', fullName: 'Neha Sharma', role: 'Department Head', department: 'Marketing', avatar: '', isVerified: true },
+    { email: 'employee@assetflow.com', password: 'Password123!', fullName: 'Arjun Nair', role: 'Employee', department: 'IT', avatar: '', isVerified: true }
   ]);
 
   localStorage.setItem('af_fb_initialized_v4', 'true');
@@ -415,9 +418,9 @@ const ApiService = {
         });
       }
     },
-    action: async (id, status) => {
+    action: async (id, status, assetId = null) => {
       try {
-        const res = await api.post(`/allocations/${id}/action`, { status });
+        const res = await api.post(`/allocations/${id}/action`, { status, assetId });
         return res.data;
       } catch (err) {
         return handleApiError(err, () => {
@@ -425,6 +428,16 @@ const ApiService = {
           const idx = allocations.findIndex(a => a.id === id);
           if (idx !== -1) {
             allocations[idx].status = status;
+            if (status === 'Approved' && assetId) {
+              allocations[idx].assetId = assetId;
+              const assets = fallbackStore.get('assets');
+              const asset = assets.find(a => a.id === assetId);
+              if (asset) {
+                allocations[idx].assetName = asset.name;
+                asset.owner = allocations[idx].allocatedTo;
+                fallbackStore.set('assets', assets);
+              }
+            }
             fallbackStore.set('allocations', allocations);
             return { success: true, message: `Allocation ${status.toLowerCase()} successfully!` };
           }
@@ -611,6 +624,55 @@ const ApiService = {
           return { success: true };
         });
       }
+    },
+    sendCustom: async (notifData) => {
+      try {
+        const res = await api.post('/notifications', notifData);
+        return res.data;
+      } catch (err) {
+        return handleApiError(err, () => {
+          const list = fallbackStore.get('notifications') || [];
+          const newNotif = {
+            id: 'NTF-' + Math.floor(1000 + Math.random() * 9000),
+            title: notifData.title,
+            message: notifData.message,
+            type: notifData.type || 'info',
+            date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+            read: false
+          };
+          list.unshift(newNotif);
+          fallbackStore.set('notifications', list);
+          return { success: true, message: "Notification sent successfully!" };
+        });
+      }
+    }
+  },
+
+  // --- DEPARTMENTS SERVICES ---
+  departments: {
+    list: async () => {
+      try {
+        const res = await api.get('/departments');
+        return res.data;
+      } catch (err) {
+        return handleApiError(err, () => {
+          return fallbackStore.get('departments', ['IT', 'Engineering', 'Human Resources', 'Marketing', 'Finance']);
+        });
+      }
+    },
+    create: async (name) => {
+      try {
+        const res = await api.post('/departments', { name });
+        return res.data;
+      } catch (err) {
+        return handleApiError(err, () => {
+          const depts = fallbackStore.get('departments', ['IT', 'Engineering', 'Human Resources', 'Marketing', 'Finance']);
+          if (depts.includes(name)) throw new Error("Department already exists.");
+          depts.push(name);
+          fallbackStore.set('departments', depts);
+          return { success: true, message: "Department added successfully!" };
+        });
+      }
     }
   },
 
@@ -659,27 +721,38 @@ const ApiService = {
         });
       }
     },
-    updateRole: async (email, role, department) => {
+    updateRole: async (email, role, department, oldHeadEmail = null, oldHeadStatus = null, oldHeadDetails = null) => {
       try {
-        const res = await api.put('/users/role', { email, role, department });
+        const res = await api.put('/users/role', { email, role, department, oldHeadEmail, oldHeadStatus, oldHeadDetails });
         return res.data;
       } catch (err) {
         return handleApiError(err, () => {
           const registeredUsers = fallbackStore.get('registered_users', []);
           
-          // Demote existing head if assigning a new head
+          // Demote / Transition existing head if assigning a new head
           if (role === 'Department Head') {
-            registeredUsers.forEach(u => {
-              if (u.department === department && u.role === 'Department Head') {
-                u.role = 'Employee';
+            if (oldHeadEmail) {
+              const oldUser = registeredUsers.find(u => u.email === oldHeadEmail);
+              if (oldUser) {
+                oldUser.role = 'Employee';
+                oldUser.status = oldHeadStatus || 'Employee';
+                oldUser.transitionDetails = oldHeadDetails || null;
               }
-            });
+            } else {
+              registeredUsers.forEach(u => {
+                if (u.department === department && u.role === 'Department Head') {
+                  u.role = 'Employee';
+                  u.status = 'Active';
+                }
+              });
+            }
           }
 
           const user = registeredUsers.find(u => u.email === email);
           if (user) {
             user.role = role;
             user.department = department;
+            user.status = 'Active';
             fallbackStore.set('registered_users', registeredUsers);
             
             // Sync with current user profile if active

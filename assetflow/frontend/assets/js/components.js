@@ -12,6 +12,26 @@
   }
 })();
 
+function getUserInitials(name) {
+  if (!name) return 'U';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function getAvatarMarkup(user, width = 40, height = 40, idPrefix = '') {
+  if (user && user.avatar) {
+    return `<img src="${user.avatar}" alt="Avatar" class="rounded-circle" width="${width}" height="${height}" id="${idPrefix}avatar">`;
+  }
+  const initials = getUserInitials(user ? (user.fullName || user.name) : 'User');
+  const sizeStyle = `width: ${width}px; height: ${height}px; font-size: ${width * 0.4}px; font-weight: 600; display: flex; align-items: center; justify-content: center; border-radius: 50%;`;
+  return `
+    <div class="bg-primary text-white" style="${sizeStyle}" id="${idPrefix}avatar-placeholder">
+      ${initials}
+    </div>
+  `;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // 1. Detect environment and set prefixes
   const isSubPage = window.location.pathname.includes('/pages/');
@@ -46,6 +66,10 @@ document.addEventListener('DOMContentLoaded', () => {
   renderSidebar(isSubPage, assetPrefix, pagePrefix);
   renderNavbar(isSubPage, assetPrefix, pagePrefix, savedTheme);
   renderFooter();
+
+  if (token) {
+    loadNavbarNotifications();
+  }
 
   // 4. Setup Global Event Listeners (Sidebar toggle, ripple, etc.)
   setupGlobalInteractions();
@@ -118,9 +142,8 @@ function renderSidebar(isSubPage, assetPrefix, pagePrefix) {
       </ul>
       <div class="sidebar-footer">
         <div class="d-flex align-items-center">
-          <div class="position-relative me-3">
-            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" 
-                 alt="User Profile" class="rounded-circle" width="40" height="40" id="sidebar-avatar">
+          <div class="position-relative me-3" id="sidebar-avatar-wrapper">
+            <div class="bg-primary text-white rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: 600;">U</div>
             <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle p-1" style="width: 8px; height: 8px;"></span>
           </div>
           <div class="overflow-hidden">
@@ -175,56 +198,25 @@ function renderNavbar(isSubPage, assetPrefix, pagePrefix, currentTheme) {
         <div class="dropdown">
           <button class="btn btn-icon btn-secondary-custom rounded-circle p-2 position-relative" id="notifications-dropdown" data-bs-toggle="dropdown" aria-expanded="false" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
             <i class="fa-solid fa-bell"></i>
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white" style="font-size: 0.65rem;">
-              3
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white" style="font-size: 0.65rem; display: none;">
+              0
             </span>
           </button>
           <ul class="dropdown-menu dropdown-menu-end shadow-md border-0 p-2" aria-labelledby="notifications-dropdown" style="width: 320px; border-radius: var(--border-radius);">
-            <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+            <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom mb-2">
               <h6 class="mb-0 fw-bold">Notifications</h6>
               <a href="${pagePrefix}notifications.html" class="text-primary text-decoration-none small">View all</a>
             </div>
-            <li>
-              <a class="dropdown-item py-2.5 d-flex align-items-start gap-2 rounded-3 mt-1" href="${pagePrefix}notifications.html">
-                <div class="bg-primary-subtle text-primary p-2 rounded-circle fs-6" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;">
-                  <i class="fa-solid fa-triangle-exclamation"></i>
-                </div>
-                <div>
-                  <p class="mb-0 fw-semibold text-truncate-2 small">Asset Server-01 needs scheduled maintenance.</p>
-                  <small class="text-muted">10 mins ago</small>
-                </div>
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item py-2.5 d-flex align-items-start gap-2 rounded-3" href="${pagePrefix}notifications.html">
-                <div class="bg-success-subtle text-success p-2 rounded-circle fs-6" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;">
-                  <i class="fa-solid fa-circle-check"></i>
-                </div>
-                <div>
-                  <p class="mb-0 fw-semibold text-truncate-2 small">Transfer request for MacBook Pro approved.</p>
-                  <small class="text-muted">2 hours ago</small>
-                </div>
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item py-2.5 d-flex align-items-start gap-2 rounded-3" href="${pagePrefix}notifications.html">
-                <div class="bg-warning-subtle text-warning p-2 rounded-circle fs-6" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;">
-                  <i class="fa-solid fa-calendar"></i>
-                </div>
-                <div>
-                  <p class="mb-0 fw-semibold text-truncate-2 small">Meeting Room B booked for tomorrow 10:00 AM.</p>
-                  <small class="text-muted">Yesterday</small>
-                </div>
-              </a>
-            </li>
+            <!-- Dynamic elements loaded via loadNavbarNotifications() -->
           </ul>
         </div>
 
         <!-- User Profile Dropdown -->
         <div class="dropdown">
           <button class="btn p-0 border-0 d-flex align-items-center gap-2" type="button" id="user-menu-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
-            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" 
-                 alt="User Avatar" class="rounded-circle" width="40" height="40" id="navbar-avatar">
+            <div id="navbar-avatar-wrapper">
+              <div class="bg-primary text-white rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: 600;">U</div>
+            </div>
           </button>
           <ul class="dropdown-menu dropdown-menu-end shadow-md border-0 p-2" aria-labelledby="user-menu-dropdown" style="border-radius: var(--border-radius);">
             <div class="px-3 py-2 border-bottom mb-2">
@@ -330,7 +322,6 @@ function setupGlobalInteractions() {
       const user = JSON.parse(savedUser);
       const nameElements = ['sidebar-username', 'navbar-username'];
       const emailElements = ['navbar-email'];
-      const avatarElements = ['sidebar-avatar', 'navbar-avatar'];
       
       nameElements.forEach(id => {
         const el = document.getElementById(id);
@@ -340,10 +331,19 @@ function setupGlobalInteractions() {
         const el = document.getElementById(id);
         if (el) el.textContent = user.email || 'user@example.com';
       });
-      avatarElements.forEach(id => {
-        const el = document.getElementById(id);
-        if (el && user.avatar) el.src = user.avatar;
-      });
+
+      // Update avatar wrappers dynamically with either image or initials
+      const sidebarAvatarWrapper = document.getElementById('sidebar-avatar-wrapper');
+      if (sidebarAvatarWrapper) {
+        sidebarAvatarWrapper.innerHTML = `
+          ${getAvatarMarkup(user, 40, 40, 'sidebar-')}
+          <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle p-1" style="width: 8px; height: 8px;"></span>
+        `;
+      }
+      const navbarAvatarWrapper = document.getElementById('navbar-avatar-wrapper');
+      if (navbarAvatarWrapper) {
+        navbarAvatarWrapper.innerHTML = getAvatarMarkup(user, 40, 40, 'navbar-');
+      }
     } catch (e) {
       console.error("Error parsing user data from localStorage", e);
     }
@@ -403,3 +403,73 @@ window.AssetFlowLoader = {
     }
   }
 };
+
+async function loadNavbarNotifications() {
+  const badge = document.querySelector('#notifications-dropdown .badge');
+  const dropdownMenu = document.querySelector('[aria-labelledby="notifications-dropdown"]');
+  if (!dropdownMenu) return;
+
+  try {
+    const list = await window.ApiService.notifications.list();
+    const unreadCount = list.filter(n => !n.read).length;
+    
+    if (badge) {
+      if (unreadCount > 0) {
+        badge.textContent = unreadCount;
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    // Clear previous items (except the header)
+    const items = dropdownMenu.querySelectorAll('li');
+    items.forEach(item => item.remove());
+
+    if (list.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'px-3 py-3 text-center text-muted small';
+      li.textContent = 'No new notifications';
+      dropdownMenu.appendChild(li);
+      return;
+    }
+
+    // Limit to top 3 notifications
+    const displayList = list.slice(0, 3);
+    const pagePrefix = window.location.pathname.includes('/pages/') ? '' : 'pages/';
+
+    displayList.forEach(n => {
+      const li = document.createElement('li');
+      
+      let iconClass = 'fa-info-circle';
+      let iconColorClass = 'bg-info-subtle text-info';
+      if (n.type === 'warning') {
+        iconClass = 'fa-triangle-exclamation';
+        iconColorClass = 'bg-warning-subtle text-warning';
+      } else if (n.type === 'success') {
+        iconClass = 'fa-circle-check';
+        iconColorClass = 'bg-success-subtle text-success';
+      }
+
+      li.innerHTML = `
+        <a class="dropdown-item py-2.5 d-flex align-items-start gap-2 rounded-3 mt-1" href="${pagePrefix}notifications.html">
+          <div class="${iconColorClass} p-2 rounded-circle fs-6" style="width:32px; height:32px; display:flex; align-items:center; justify-content:center; flex-shrink: 0;">
+            <i class="fa-solid ${iconClass}"></i>
+          </div>
+          <div class="overflow-hidden">
+            <p class="mb-0 fw-semibold text-truncate-2 small text-dark-custom" style="color: var(--text-color);">${escapeHtml(n.title)}</p>
+            <p class="mb-0 text-muted small text-truncate">${escapeHtml(n.message)}</p>
+          </div>
+        </a>
+      `;
+      dropdownMenu.appendChild(li);
+    });
+  } catch (err) {
+    console.error("Failed to load navbar notifications:", err);
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}

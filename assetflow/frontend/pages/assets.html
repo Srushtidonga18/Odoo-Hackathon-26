@@ -38,9 +38,14 @@
             <h2 class="fw-bold mb-0">Asset Inventory</h2>
             <p class="text-muted mb-0">Manage hardware, software licenses, and resources</p>
           </div>
-           <button class="btn btn-primary-custom text-white" id="btn-open-add-modal" data-permission-action="register_asset">
-            <i class="fa-solid fa-plus me-2"></i>Add Asset
-          </button>
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary-custom text-white" id="btn-open-add-modal" data-permission-action="register_asset">
+              <i class="fa-solid fa-plus me-2"></i>Add Asset
+            </button>
+            <button class="btn btn-primary-custom text-white" id="btn-open-request-modal" data-permission-action="request_asset">
+              <i class="fa-solid fa-paper-plane me-2"></i>Request Asset
+            </button>
+          </div>
         </div>
 
         <!-- Filter & Search Panel -->
@@ -189,6 +194,58 @@
                 <button type="submit" class="btn btn-primary-custom text-white d-flex align-items-center" id="btn-save-asset">
                   <span>Save Asset</span>
                   <span class="spinner-border spinner-border-sm ms-2 d-none" id="asset-spinner" role="status" aria-hidden="true"></span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Request Asset Modal -->
+      <div class="modal fade" id="requestModal" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content" style="border-radius: var(--border-radius); border: 1px solid var(--border-color); background-color: var(--card-bg);">
+            <div class="modal-header border-bottom">
+              <h5 class="modal-title fw-bold" id="requestModalLabel">Request New Asset</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="request-asset-form" novalidate>
+              <div class="modal-body">
+                
+                <!-- Category Select -->
+                <div class="mb-3">
+                  <label for="request-asset-type" class="form-label-custom">Asset Type / Category <span class="text-danger">*</span></label>
+                  <select id="request-asset-type" class="form-select form-control-custom" required>
+                    <option value="">Select type...</option>
+                    <option value="Hardware - Laptop">Hardware - Laptop</option>
+                    <option value="Hardware - Monitor">Hardware - Monitor</option>
+                    <option value="Hardware - Keyboard & Mouse">Hardware - Keyboard & Mouse</option>
+                    <option value="Software - License">Software - License</option>
+                    <option value="Furniture - Chair">Furniture - Chair</option>
+                  </select>
+                  <div class="invalid-feedback d-block mt-1" id="request-asset-type-error"></div>
+                </div>
+
+                <!-- Date -->
+                <div class="mb-3">
+                  <label for="request-needed-date" class="form-label-custom">Needed By Date <span class="text-danger">*</span></label>
+                  <input type="date" id="request-needed-date" class="form-control form-control-custom" required>
+                  <div class="invalid-feedback d-block mt-1" id="request-needed-date-error"></div>
+                </div>
+
+                <!-- Reason -->
+                <div class="mb-3">
+                  <label for="request-reason" class="form-label-custom">Reason / Justification <span class="text-danger">*</span></label>
+                  <textarea id="request-reason" rows="3" class="form-control form-control-custom" placeholder="Why is this asset needed? (e.g. for development work)" required></textarea>
+                  <div class="invalid-feedback d-block mt-1" id="request-reason-error"></div>
+                </div>
+
+              </div>
+              <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary-custom" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary-custom text-white d-flex align-items-center" id="btn-submit-request">
+                  <span>Submit Request</span>
+                  <span class="spinner-border spinner-border-sm ms-2 d-none" id="request-spinner" role="status" aria-hidden="true"></span>
                 </button>
               </div>
             </form>

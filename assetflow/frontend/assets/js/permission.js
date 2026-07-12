@@ -39,9 +39,9 @@ const permissions = {
     ]
   },
   'Employee': {
-    pages: ['dashboard.html', 'booking.html', 'maintenance.html', 'notifications.html', 'profile.html'],
+    pages: ['dashboard.html', 'assets.html', 'booking.html', 'maintenance.html', 'notifications.html', 'profile.html'],
     actions: [
-      'book_resource', 'raise_maintenance', 'request_transfer', 'request_return'
+      'book_resource', 'raise_maintenance', 'request_transfer', 'request_return', 'request_asset'
     ]
   }
 };

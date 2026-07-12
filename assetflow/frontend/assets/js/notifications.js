@@ -97,11 +97,104 @@ function setupEventListeners() {
           icon: 'success',
           title: 'Marked as read'
         });
-        
-        // Reload notifications in components like dropdown if rendered
-        // But since this is a page, just local style change is perfect.
       } catch (err) {
         console.error(err);
+      }
+    });
+  }
+
+  // Handle Send Notification visibility
+  const currentUser = JSON.parse(localStorage.getItem('user')) || {};
+  const openModalBtn = document.getElementById('btn-open-send-notif-modal');
+  if (openModalBtn && (currentUser.role === 'Admin' || currentUser.role === 'Asset Manager')) {
+    openModalBtn.classList.remove('d-none');
+  }
+
+  // Handle target dropdown toggle
+  const targetType = document.getElementById('notif-target-type');
+  const roleGroup = document.getElementById('notif-role-group');
+  const emailGroup = document.getElementById('notif-email-group');
+  if (targetType && roleGroup && emailGroup) {
+    targetType.addEventListener('change', () => {
+      const val = targetType.value;
+      if (val === 'role') {
+        roleGroup.classList.remove('d-none');
+        emailGroup.classList.add('d-none');
+      } else if (val === 'email') {
+        roleGroup.classList.add('d-none');
+        emailGroup.classList.remove('d-none');
+      } else {
+        roleGroup.classList.add('d-none');
+        emailGroup.classList.add('d-none');
+      }
+    });
+  }
+
+  // Form submission handler
+  const sendForm = document.getElementById('send-notification-form');
+  if (sendForm) {
+    sendForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const title = document.getElementById('notif-title').value.trim();
+      const message = document.getElementById('notif-message').value.trim();
+      const type = document.getElementById('notif-type').value;
+      const targetVal = targetType.value;
+      
+      if (!title || !message) {
+        Swal.fire('Validation Error', 'Title and message are required fields.', 'warning');
+        return;
+      }
+
+      let targetRole = null;
+      let targetUserEmail = null;
+
+      if (targetVal === 'role') {
+        targetRole = document.getElementById('notif-target-role').value;
+      } else if (targetVal === 'email') {
+        targetUserEmail = document.getElementById('notif-target-email').value.trim();
+        if (!targetUserEmail) {
+          Swal.fire('Validation Error', 'Please enter a target email address.', 'warning');
+          return;
+        }
+      }
+
+      const spinner = document.getElementById('send-notif-spinner');
+      const submitBtn = document.getElementById('btn-submit-notif');
+      if (spinner) spinner.classList.remove('d-none');
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        await window.ApiService.notifications.sendCustom({
+          title,
+          message,
+          type,
+          targetRole,
+          targetUserEmail
+        });
+
+        // Close modal
+        const modalEl = document.getElementById('sendNotificationModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        sendForm.reset();
+        if (roleGroup) roleGroup.classList.add('d-none');
+        if (emailGroup) emailGroup.classList.add('d-none');
+
+        Swal.fire({
+          title: 'Notification Sent',
+          text: 'Alert was broadcasted or routed successfully.',
+          icon: 'success',
+          confirmButtonColor: '#2563EB'
+        });
+
+        await loadNotifications();
+      } catch (err) {
+        Swal.fire('Error Sending Alert', err.message, 'error');
+      } finally {
+        if (spinner) spinner.classList.add('d-none');
+        if (submitBtn) submitBtn.disabled = false;
       }
     });
   }

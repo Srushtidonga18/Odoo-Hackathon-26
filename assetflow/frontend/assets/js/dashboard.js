@@ -33,17 +33,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadDashboardData(role) {
   try {
     // 1. Fetch data from services in parallel
-    const [assets, allocations, bookings, maintenance, notifications] = await Promise.all([
+    const [assets, allocations, bookings, maintenance, notifications, departments, registeredUsers] = await Promise.all([
       window.ApiService.assets.list(),
       window.ApiService.allocations.list(),
       window.ApiService.bookings.list(),
       window.ApiService.maintenance.list(),
-      window.ApiService.notifications.list()
+      window.ApiService.notifications.list(),
+      window.ApiService.departments ? window.ApiService.departments.list() : Promise.resolve([]),
+      window.ApiService.users ? window.ApiService.users.list() : Promise.resolve([])
     ]);
 
     const currentUser = window.RbacService.getCurrentUser() || {};
     const userDept = currentUser.department || 'IT';
-    const userName = currentUser.name || 'Arjun Nair';
+    const userName = currentUser.fullName || currentUser.name || 'Arjun Nair';
 
     let filteredAssets = assets;
     let filteredAllocations = allocations;
@@ -70,7 +72,9 @@ async function loadDashboardData(role) {
       bookings: filteredBookings,
       maintenance,
       notifications,
-      totalValue
+      totalValue,
+      departments,
+      registeredUsers
     };
 
     window.dashboardData = data;
@@ -162,8 +166,8 @@ function buildKpiCards(role, data) {
       { label: 'Total Assets', val: data.assets.length, desc: `₹${data.totalValue.toLocaleString()}`, icon: 'fa-boxes-stacked', bg: 'bg-primary-subtle text-primary' },
       { label: 'Available Assets', val: data.assets.filter(a => a.status === 'Active').length, desc: 'Ready for use', icon: 'fa-circle-check', bg: 'bg-success-subtle text-success' },
       { label: 'Allocated Assets', val: data.allocations.filter(a => a.status === 'Approved').length, desc: 'In use', icon: 'fa-right-left', bg: 'bg-info-subtle text-info' },
-      { label: 'Total Departments', val: 5, desc: 'Enterprise groups', icon: 'fa-sitemap', bg: 'bg-warning-subtle text-warning' },
-      { label: 'Total Employees', val: 42, desc: 'Registered staff', icon: 'fa-users', bg: 'bg-purple-subtle text-purple' },
+      { label: 'Total Departments', val: data.departments ? data.departments.length : 5, desc: 'Enterprise groups', icon: 'fa-sitemap', bg: 'bg-warning-subtle text-warning' },
+      { label: 'Total Employees', val: data.registeredUsers ? data.registeredUsers.length : 42, desc: 'Registered staff', icon: 'fa-users', bg: 'bg-purple-subtle text-purple' },
       { label: 'Pending Maintenance', val: data.maintenance.filter(m => m.status === 'Pending').length, desc: 'Requires action', icon: 'fa-screwdriver-wrench', bg: 'bg-danger-subtle text-danger' },
       { label: 'Active Audit Cycles', val: 1, desc: 'Q3 Asset Audit', icon: 'fa-clipboard-check', bg: 'bg-primary-subtle text-primary' },
       { label: 'Pending Approvals', val: data.allocations.filter(a => a.status === 'Pending Approval').length, desc: 'Awaiting Sign-off', icon: 'fa-circle-exclamation', bg: 'bg-warning-subtle text-warning' }
@@ -726,38 +730,57 @@ function buildDetailsRow(role, data) {
     // Populate my assets
     const myAssetsBody = document.getElementById('my-assets-table-body');
     if (myAssetsBody) {
-      myAssetsBody.innerHTML = `
-        <tr>
-          <td><strong>MacBook Pro 16"</strong></td>
-          <td><code>AST-001</code></td>
-          <td>2026-06-15</td>
-          <td><span class="badge bg-success-subtle text-success rounded-pill px-2 py-0.5">Active</span></td>
-        </tr>
-        <tr>
-          <td><strong>Dell Monitor 32"</strong></td>
-          <td><code>AST-002</code></td>
-          <td>2026-06-20</td>
-          <td><span class="badge bg-success-subtle text-success rounded-pill px-2 py-0.5">Active</span></td>
-        </tr>
-      `;
+      if (data.assets && data.assets.length > 0) {
+        let html = '';
+        data.assets.forEach(asset => {
+          html += `
+            <tr>
+              <td><strong>${asset.name}</strong></td>
+              <td><code>${asset.serialNumber || asset.id}</code></td>
+              <td>${asset.purchaseDate || 'N/A'}</td>
+              <td><span class="badge bg-success-subtle text-success rounded-pill px-2 py-0.5">${asset.status}</span></td>
+            </tr>
+          `;
+        });
+        myAssetsBody.innerHTML = html;
+      } else {
+        myAssetsBody.innerHTML = `
+          <tr>
+            <td colspan="4" class="text-center py-4 text-muted">
+              <i class="fa-solid fa-folder-open d-block fs-3 mb-2"></i>
+              No assets allocated to you.
+            </td>
+          </tr>
+        `;
+      }
     }
 
     // Populate my bookings
     const myBookingsBody = document.getElementById('my-bookings-table-body');
     if (myBookingsBody) {
-      const myBooks = data.bookings.filter(b => b.bookedBy.includes('Alex Rivera') || b.bookedBy.includes('Jane') || b.bookedBy.includes('User'));
-      let html = '';
-      (myBooks.length ? myBooks : data.bookings.slice(0, 2)).forEach(b => {
-        html += `
+      if (data.bookings && data.bookings.length > 0) {
+        let html = '';
+        data.bookings.forEach(b => {
+          html += `
+            <tr>
+              <td><strong>${b.resourceName}</strong></td>
+              <td>${b.date}</td>
+              <td class="small">${b.startTime} - ${b.endTime}</td>
+              <td><span class="badge bg-success-subtle text-success rounded-pill px-2 py-0.5">${b.status}</span></td>
+            </tr>
+          `;
+        });
+        myBookingsBody.innerHTML = html;
+      } else {
+        myBookingsBody.innerHTML = `
           <tr>
-            <td><strong>${b.resourceName}</strong></td>
-            <td>${b.date}</td>
-            <td class="small">${b.startTime} - ${b.endTime}</td>
-            <td><span class="badge bg-success-subtle text-success rounded-pill px-2 py-0.5">${b.status}</span></td>
+            <td colspan="4" class="text-center py-4 text-muted">
+              <i class="fa-solid fa-calendar-xmark d-block fs-3 mb-2"></i>
+              No active bookings.
+            </td>
           </tr>
         `;
-      });
-      myBookingsBody.innerHTML = html || '<tr><td colspan="4" class="text-center py-3 text-muted">No active bookings.</td></tr>';
+      }
     }
   }
 }

@@ -18,6 +18,33 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+function getUserInitials(name) {
+  if (!name) return 'U';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function updateProfileAvatarDisplay(user) {
+  const wrapper = document.getElementById('profile-avatar-wrapper');
+  if (!wrapper) return;
+
+  if (user && user.avatar) {
+    wrapper.innerHTML = `
+      <img src="${user.avatar}" alt="Avatar" id="profile-card-img" style="width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 3px solid var(--border-color);">
+    `;
+  } else {
+    const initials = getUserInitials(user ? (user.fullName || user.name) : 'User');
+    wrapper.innerHTML = `
+      <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+           id="profile-card-img-placeholder"
+           style="width: 140px; height: 140px; font-size: 56px; font-weight: 600; border: 3px solid var(--border-color);">
+        ${initials}
+      </div>
+    `;
+  }
+}
+
 function loadUserProfile() {
   const savedUser = localStorage.getItem('user');
   if (!savedUser) return;
@@ -30,9 +57,7 @@ function loadUserProfile() {
     document.getElementById('profile-card-role').textContent = user.role || 'Employee';
     document.getElementById('profile-card-email').textContent = user.email || 'user@company.com';
     
-    if (user.avatar) {
-      document.getElementById('profile-card-img').src = user.avatar;
-    }
+    updateProfileAvatarDisplay(user);
 
     // Set Form Fields
     document.getElementById('profile-name').value = user.fullName || user.name || '';
@@ -69,9 +94,8 @@ function setupProfileToggles() {
 
 function setupAvatarUpload() {
   const input = document.getElementById('profile-avatar-upload');
-  const cardImg = document.getElementById('profile-card-img');
   
-  if (input && cardImg) {
+  if (input) {
     input.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
@@ -83,18 +107,31 @@ function setupAvatarUpload() {
         const reader = new FileReader();
         reader.onload = async (event) => {
           const base64 = event.target.result;
-          cardImg.src = base64;
           
           window.AssetFlowLoader.show();
           try {
             // Update profile with new base64 avatar
             await window.ApiService.profile.update({ avatar: base64 });
             
-            // Sync image inside top Navbar & Sidebar
-            const navAvatar = document.getElementById('navbar-avatar');
-            const sideAvatar = document.getElementById('sidebar-avatar');
-            if (navAvatar) navAvatar.src = base64;
-            if (sideAvatar) sideAvatar.src = base64;
+            // Update local user object
+            const savedUser = localStorage.getItem('user');
+            if (savedUser) {
+              const userObj = JSON.parse(savedUser);
+              userObj.avatar = base64;
+              localStorage.setItem('user', JSON.stringify(userObj));
+              updateProfileAvatarDisplay(userObj);
+            }
+
+            // Sync image inside top Navbar & Sidebar wrappers
+            const navWrapper = document.getElementById('navbar-avatar-wrapper');
+            const sideWrapper = document.getElementById('sidebar-avatar-wrapper');
+            if (navWrapper) navWrapper.innerHTML = `<img src="${base64}" alt="Avatar" class="rounded-circle" width="40" height="40" id="navbar-avatar">`;
+            if (sideWrapper) {
+              sideWrapper.innerHTML = `
+                <img src="${base64}" alt="Avatar" class="rounded-circle" width="40" height="40" id="sidebar-avatar">
+                <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle p-1" style="width: 8px; height: 8px;"></span>
+              `;
+            }
 
             Swal.fire({
               title: 'Avatar Updated',
